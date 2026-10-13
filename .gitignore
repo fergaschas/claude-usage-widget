@@ -1,0 +1,9 @@
+# datos locales del usuario (historial, ajustes, iconos generados)
+data/
+
+# binarios y artefactos de compilación (el instalador se publica en Releases)
+*.exe
+build/
+dist/
+*.spec
+__pycache__/
