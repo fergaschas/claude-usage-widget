@@ -31,7 +31,7 @@ from datetime import datetime
 from pathlib import Path
 
 APP_NAME = "Claude Usage"
-APP_VERSION = "2.5"
+APP_VERSION = "2.5.1"
 APP_ID = "ClaudeUsage.Tracker"
 FROZEN = getattr(sys, "frozen", False)  # empaquetado como .exe con PyInstaller
 APP_FILE = Path(sys.executable if FROZEN else __file__).resolve()
