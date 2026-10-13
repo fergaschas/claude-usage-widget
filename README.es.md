@@ -6,7 +6,7 @@ Widget de escritorio para Windows que muestra **cuánto has usado de tu plan de 
 
 > Proyecto no oficial, sin relación con Anthropic.
 
-**Versión actual: 2.5.1** · [Descargar `ClaudeUsage-Setup.exe`](../../releases/latest/download/ClaudeUsage-Setup.exe) · [Novedades](#historial-de-versiones)
+**Versión actual: 2.5.2** · [Descargar `ClaudeUsage-Setup.exe`](../../releases/latest/download/ClaudeUsage-Setup.exe) · [Novedades](#historial-de-versiones)
 
 <p>
   <img src="docs/widget-large.png" alt="Estilo Grande" height="260">
@@ -79,6 +79,7 @@ El actualizador de la app lee la última Release de GitHub, así que cada versi�
 
 | Versión | Cambios |
 |---|---|
+| **2.5.2** | Arreglo para PCs que se quedaban atascados en *Anthropic limita las consultas*: el asistente de conexión ya no vuelve a consultar cada 10 segundos, las esperas crecen (5, 10, 20, 30 min) y nada se las salta salvo el botón de actualizar. El widget muestra la hora del reintento. Nuevo registro (*Abrir registro* en el menú), incluido también en *Copiar diagnóstico*. |
 | **2.5.1** | Correcciones de las actualizaciones desde la app: `v2.5` y `v2.5.0` cuentan como la misma versión, y la app ya no se queda en *Instalando la actualización…* si el instalador no llega a arrancar. |
 | **2.5** | **Actualizaciones desde la app** con verificación SHA-256. Mejor detección de Claude Code: la copia incluida en la app de escritorio de Claude, nvm, scoop, bun, volta, WSL y `CLAUDE_CONFIG_DIR`. Nuevo botón *Copiar diagnóstico*. |
 | **2.4** | **Asistente de conexión** en el primer uso: instala Claude Code si hace falta, inicia sesión en Claude y comprueba el uso. Aviso *Sin conexión con Claude · Conectar* en el widget. |

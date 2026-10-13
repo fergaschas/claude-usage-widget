@@ -20,7 +20,7 @@ from pathlib import Path
 from tkinter import filedialog
 
 APP_NAME = "Claude Usage"
-VERSION = "2.5.1"
+VERSION = "2.5.2"
 EXE = "ClaudeUsage.exe"
 BUNDLE = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 PAYLOAD, ICON = BUNDLE / EXE, BUNDLE / "icon.png"

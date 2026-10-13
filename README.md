@@ -6,7 +6,7 @@ A Windows desktop widget that shows **how much of your Claude plan you've used**
 
 > Unofficial project, not affiliated with Anthropic.
 
-**Latest version: 2.5.1** · [Download `ClaudeUsage-Setup.exe`](../../releases/latest/download/ClaudeUsage-Setup.exe) · [What's new](#version-history)
+**Latest version: 2.5.2** · [Download `ClaudeUsage-Setup.exe`](../../releases/latest/download/ClaudeUsage-Setup.exe) · [What's new](#version-history)
 
 <p>
   <img src="docs/widget-large.png" alt="Large style" height="260">
@@ -79,6 +79,7 @@ The in-app updater reads the latest GitHub release, so each release must follow 
 
 | Version | Changes |
 |---|---|
+| **2.5.2** | Fix for PCs that stayed stuck on *Anthropic is rate-limiting requests*: the connection wizard no longer re-queries every 10 seconds, waits grow (5, 10, 20, 30 min) and nothing skips them except the refresh button. The widget shows the retry time. New log file (*Open log* in the menu), also included in *Copy diagnostics*. |
 | **2.5.1** | Fixes for in-app updates: `v2.5` and `v2.5.0` count as the same version, and the app no longer gets stuck on *Installing the update…* if the installer fails to start. |
 | **2.5** | **In-app updates** with SHA-256 verification. Better Claude Code detection: the copy bundled with the Claude desktop app, nvm, scoop, bun, volta, WSL and `CLAUDE_CONFIG_DIR`. New *Copy diagnostics* button. |
 | **2.4** | **Connection wizard** on first run: installs Claude Code if needed, signs you in to Claude and checks your usage. *Not connected to Claude · Connect* notice in the widget. |

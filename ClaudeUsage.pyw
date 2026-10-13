@@ -11,6 +11,7 @@ Solo usa la librería estándar de Python.
 import base64
 import csv
 import json
+import logging
 import os
 import queue
 import re
@@ -31,7 +32,7 @@ from datetime import datetime
 from pathlib import Path
 
 APP_NAME = "Claude Usage"
-APP_VERSION = "2.5.1"
+APP_VERSION = "2.5.2"
 APP_ID = "ClaudeUsage.Tracker"
 FROZEN = getattr(sys, "frozen", False)  # empaquetado como .exe con PyInstaller
 APP_FILE = Path(sys.executable if FROZEN else __file__).resolve()
@@ -39,6 +40,7 @@ APP_DIR = APP_FILE.parent
 DATA_DIR = APP_DIR / "data"
 SETTINGS_FILE = DATA_DIR / "settings.json"
 HISTORY_FILE = DATA_DIR / "history.jsonl"
+LOG_FILE = DATA_DIR / "claude-usage.log"
 ICON_PNG = DATA_DIR / "icon.png"
 ICON_ICO = DATA_DIR / "icon.ico"
 CREDENTIALS = Path.home() / ".claude" / ".credentials.json"
@@ -54,7 +56,9 @@ HISTORY_DAYS = 8
 TOKEN_DAYS = 7
 TOKEN_SCAN_MS = 5 * 60_000
 THRESHOLDS = (75, 90, 100)
-RATE_LIMIT_WAIT = 300  # s de espera tras un 429
+# esperas tras un 429 de Anthropic (no envía Retry-After): crecen mientras dure el límite
+RATE_LIMIT_STEPS = (300, 600, 1200, 1800)
+log = logging.getLogger("claude-usage")
 DEFAULTS = {"on_top": True, "notify": True, "interval": 60, "details": False, "chart_hours": 24,
             "check_updates": True,
             "mode": "widget", "alpha": 1.0, "widget_style": "large", "lang": None}
@@ -77,7 +81,11 @@ STRINGS = {
         "short.weekly_opus": "Opus", "short.weekly_sonnet": "Sonnet",
         "err.no_session": "No estás conectado a Claude. Abre «Cuenta de Claude…» para conectarte.",
         "err.token": "La sesión de Claude ha caducado. Abre «Cuenta de Claude…» para reconectar.",
-        "err.ratelimit": "Anthropic limita las consultas por ahora; reintento en {min} min.",
+        "err.ratelimit": "Anthropic limita las consultas por ahora; se reintentará a las {time}.",
+        "wait.ratelimit": "Esperando a Anthropic · reintento a las {time}",
+        "step.usage.ratelimit": "Conexión correcta. Anthropic limita las consultas ahora mismo; la app "
+                                "reintentará sola a las {time}. Puedes empezar a usarla.",
+        "menu.log": "Abrir registro (log)",
         "err.fetch": "No se pudo consultar el uso ({name}).",
         "when.today": "a las {time}", "when.other": "el {day} a las {time}",
         "reset.done": "reiniciado", "reset.in": "reinicia en {left} ({stamp})", "reset.short_done": "ya",
@@ -172,7 +180,11 @@ STRINGS = {
         "short.weekly_opus": "Opus", "short.weekly_sonnet": "Sonnet",
         "err.no_session": "Not connected to Claude. Open “Claude account…” to connect.",
         "err.token": "Your Claude session expired. Open “Claude account…” to reconnect.",
-        "err.ratelimit": "Anthropic is rate-limiting requests; retrying in {min} min.",
+        "err.ratelimit": "Anthropic is rate-limiting requests for now; retrying at {time}.",
+        "wait.ratelimit": "Waiting for Anthropic · retry at {time}",
+        "step.usage.ratelimit": "Connected. Anthropic is rate-limiting requests right now; the app will "
+                                "retry by itself at {time}. You can start using it.",
+        "menu.log": "Open log",
         "err.fetch": "Couldn't fetch usage ({name}).",
         "when.today": "at {time}", "when.other": "on {day} at {time}",
         "reset.done": "reset", "reset.in": "resets in {left} ({stamp})", "reset.short_done": "now",
@@ -323,10 +335,13 @@ def fetch_usage():
         with urllib.request.urlopen(req, timeout=15) as resp:
             return json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
+        retry_after = e.headers.get("retry-after", "")
+        log.warning("usage HTTP %s (request-id %s, retry-after %s)", e.code, e.headers.get("request-id", "-"),
+                    retry_after or "-")
         if e.code in (401, 403):
             raise AuthError("err.token")
         if e.code == 429:
-            raise RateLimited("err.ratelimit", min=RATE_LIMIT_WAIT // 60)
+            raise RateLimited("err.ratelimit", retry_after=int(retry_after) if retry_after.isdigit() else 0)
         raise
 
 
@@ -848,7 +863,13 @@ class Widget:
             self.cta.pack(fill="x", after=self.head, pady=(6, 0))
         else:
             self.cta.pack_forget()
-        self.placeholder.config(text="" if disconnected else tr("loading"))
+        if disconnected:
+            waiting = ""
+        elif error and error[0] == "err.ratelimit":
+            waiting = tr("wait.ratelimit", **error[1])
+        else:
+            waiting = tr("loading")
+        self.placeholder.config(text=waiting)
         self.placeholder.grid() if not limits else self.placeholder.grid_remove()
         if len(self.rows) != len(limits):
             for row in self.rows:
@@ -1229,10 +1250,18 @@ def claude_version(claude):
         return ""
 
 
+_last_connection = [None]
+
+
 def check_connection():
     claude = find_claude()
     status = auth_status(claude) if claude else None
     creds, wsl = find_credentials(status)
+    summary = (claude, claude_source(claude), (status or {}).get("loggedIn"), (status or {}).get("authMethod"),
+               str(creds), creds.exists(), wsl and wsl[1] if isinstance(wsl, tuple) else wsl)
+    if summary != _last_connection[0]:
+        _last_connection[0] = summary
+        log.info("conexión: claude=%s (%s) loggedIn=%s authMethod=%s credenciales=%s existe=%s wsl=%s", *summary)
     return {"claude": claude, "source": claude_source(claude), "status": status,
             "version": claude_version(claude) if claude else "", "creds": creds, "wsl": wsl,
             "creds_ok": creds.exists()}
@@ -1253,6 +1282,11 @@ def diagnostics(info):
     lines.append("PATH (claude/node/npm):")
     lines += [f"  {p}" for p in _search_path().split(os.pathsep)
               if any(k in p.lower() for k in ("claude", "node", "npm", "bun", "scoop", "volta", ".local"))]
+    try:
+        tail = LOG_FILE.read_text(encoding="utf-8", errors="replace").splitlines()[-40:]
+        lines += ["log (últimas líneas):"] + [f"  {t}" for t in tail]
+    except OSError:
+        pass
     return "\n".join(lines)
 
 
@@ -1409,12 +1443,16 @@ class ConnectWindow:
             usage.set("ok", tr("step.usage.ok"),
                       summary + (f"\n{tr(app.error[0], **app.error[1])}" if app.error else ""))
             done = True
+        elif app.error and app.error[0] == "err.ratelimit":
+            # la conexión está bien; solo hay que esperar. No volver a consultar: alargaría el límite
+            usage.set("wait", tr("step.usage"), tr("step.usage.ratelimit", **app.error[1]))
+            done = True
         else:
             if app.error:
                 usage.set("error", tr("step.usage"), tr(app.error[0], **app.error[1]))
             else:
                 usage.set("wait", tr("step.usage"), tr("loading"))
-            if time.time() - self.last_refresh > 10:  # recién conectado: pedir el uso ya
+            if time.time() - self.last_refresh > 30:  # recién conectado: pedir el uso ya
                 self.last_refresh = time.time()
                 app.refresh()
         self._set_done(done)
@@ -1544,6 +1582,7 @@ class App:
             self.limits = [{"kind": k, "pct": v[0], "reset": v[1]} for k, v in last["l"].items()]
             self.updated_at = datetime.fromtimestamp(last["t"])
         self.busy, self._job = False, None
+        self.backoff_until, self.backoff_step = 0.0, 0
         self.connect_win = self.account = None
 
         root.withdraw()  # se muestra la vista elegida al final
@@ -1559,7 +1598,7 @@ class App:
         except tk.TclError:
             pass
         root.protocol("WM_DELETE_WINDOW", lambda: self.show_mode("widget"))
-        root.bind("<F5>", lambda e: self.refresh())
+        root.bind("<F5>", lambda e: self.refresh(manual=True))
 
         self.on_top = tk.BooleanVar(value=self.settings["on_top"])
         self.notify = tk.BooleanVar(value=self.settings["notify"])
@@ -1599,7 +1638,7 @@ class App:
         tk.Label(header, text=tr("title"), bg=BG, fg=FG, font=(FONT_B, 12)).pack(side="left")
         self.menu_btn = tk.Button(header, text="⚙", command=self._show_menu, **btn)
         self.menu_btn.pack(side="right")
-        tk.Button(header, text="⟳", command=self.refresh, **btn).pack(side="right")
+        tk.Button(header, text="⟳", command=lambda: self.refresh(manual=True), **btn).pack(side="right")
 
         self.body = tk.Frame(self.root, bg=BG, padx=12)
         self.body.pack(fill="x")
@@ -1686,6 +1725,7 @@ class App:
         m.add_command(label=tr("menu.export"), command=self.export_csv)
         m.add_command(label=tr("menu.test"), command=lambda: toast(APP_NAME, tr("test.body")))
         m.add_command(label=tr("menu.folder"), command=lambda: os.startfile(APP_DIR))
+        m.add_command(label=tr("menu.log"), command=lambda: LOG_FILE.exists() and os.startfile(LOG_FILE))
         m.add_separator()
         m.add_command(label=tr("menu.check_updates"), command=lambda: self.check_updates(manual=True))
         m.add_checkbutton(label=tr("menu.auto_updates"), variable=self.auto_updates, command=self.save)
@@ -1742,6 +1782,7 @@ class App:
         threading.Thread(target=work, daemon=True).start()
 
     def _on_update_check(self, info, manual, failed):
+        log.info("update check: %s", "fallo" if failed else (info or {}).get("version", "sin instalador"))
         if info and version_tuple(info["version"]) > version_tuple(APP_VERSION):
             self.update_info = info
             if not manual and self.settings.get("update_notified") != info["version"]:
@@ -1804,6 +1845,7 @@ class App:
 
     def _install_update(self, setup):
         """Lanza el instalador en modo silencioso; él cierra esta app, sustituye el .exe y la vuelve a abrir."""
+        log.info("instalando actualización: %s", setup)
         self.update_state = ("installing",)
         self.render()
         env = {**os.environ, "PYINSTALLER_RESET_ENVIRONMENT": "1"}
@@ -1817,6 +1859,7 @@ class App:
         self.root.after(90_000, lambda: self.update_state == ("installing",) and self._update_failed("timeout"))
 
     def _update_failed(self, error):
+        log.warning("actualización fallida: %s", error)
         self.update_state = None
         self.render()
         toast(APP_NAME, tr("update.failed", e=error))
@@ -1979,13 +2022,32 @@ class App:
             except OSError:
                 return
 
-    def refresh(self):
+    def refresh(self, manual=False):
+        """Consulta el uso y programa la siguiente consulta. Mientras Anthropic limite las consultas,
+        solo se adelanta si lo pide el usuario (⟳ o F5)."""
+        wait = self.backoff_until - time.time()
+        if wait > 0 and not manual:
+            self._schedule(wait)
+            return
         if not self.busy:
             self.busy = True
             threading.Thread(target=self._fetch_worker, daemon=True).start()
+        self._schedule(self.interval.get())
+
+    def _schedule(self, seconds):
         if self._job:
             self.root.after_cancel(self._job)
-        self._job = self.root.after(self.interval.get() * 1000, self.refresh)
+        self._job = self.root.after(max(1000, int(seconds * 1000)), self.refresh)
+
+    def _on_rate_limited(self, retry_after):
+        wait = max(retry_after, RATE_LIMIT_STEPS[min(self.backoff_step, len(RATE_LIMIT_STEPS) - 1)])
+        self.backoff_step += 1
+        self.backoff_until = time.time() + wait
+        retry_at = datetime.fromtimestamp(self.backoff_until)
+        log.warning("rate limited (%d seguidos): próximo intento a las %s", self.backoff_step, f"{retry_at:%H:%M:%S}")
+        self.error = ("err.ratelimit", {"time": f"{retry_at:%H:%M}"})
+        self._schedule(wait)
+        self.render()
 
     def _fetch_usage_renewing(self):
         try:
@@ -2005,6 +2067,7 @@ class App:
         except AuthError as e:
             self.events.put(("error", (e.key, e.kw)))
         except Exception as e:  # red caída, respuesta inesperada…
+            log.warning("usage error: %r", e)
             self.events.put(("error", ("err.fetch", {"name": e.__class__.__name__})))
 
     def scan_tokens(self):
@@ -2018,15 +2081,16 @@ class App:
             if kind == "usage":
                 self.busy = False
                 self._on_usage(payload)
-            elif kind in ("error", "ratelimit"):
+            elif kind == "ratelimit":
+                self.busy = False
+                self._on_rate_limited(payload[1].get("retry_after") or 0)
+            elif kind == "error":
                 self.busy = False
                 self.error = payload
+                log.info("error: %s", payload[0])
                 self.render()
                 if payload[0] in AUTH_ERRORS and not self.settings.get("onboarded") and not self.connect_win:
                     self.open_connect()
-                if kind == "ratelimit":  # no insistir: esperar antes del próximo intento
-                    self.root.after_cancel(self._job)
-                    self._job = self.root.after(RATE_LIMIT_WAIT * 1000, self.refresh)
             elif kind == "tokens":
                 self.tokens = payload
                 self._render_tokens()
@@ -2047,7 +2111,7 @@ class App:
                 self.quit()
             elif kind == "tray":
                 {Tray.TOGGLE: self.toggle_visible, Tray.FULL: lambda: self.show_mode("full"),
-                 Tray.REFRESH: self.refresh, Tray.QUIT: self.quit}.get(payload, lambda: None)()
+                 Tray.REFRESH: lambda: self.refresh(manual=True), Tray.QUIT: self.quit}.get(payload, lambda: None)()
 
     def _tick(self):
         """Refresca cuentas atrás y marcadores aunque no haya datos nuevos."""
@@ -2061,6 +2125,10 @@ class App:
             self._check_alerts(limits)
         self.history.add(limits)
         self.data, self.limits, self.error = data, limits, None
+        if self.backoff_step:
+            log.info("límite de consultas superado tras %d esperas", self.backoff_step)
+        self.backoff_until, self.backoff_step = 0.0, 0
+        log.info("usage ok: %s", " · ".join(f"{lim['kind']} {lim['pct']:.0f}%" for lim in limits) or "sin límites")
         if self.connect_win and self.connect_win.info:  # marcar "leer tu uso" en cuanto llega el dato
             self.connect_win.update(self.connect_win.info)
         self.updated_at = datetime.now()
@@ -2277,6 +2345,11 @@ def main():
     ensure_icons()
     if "--make-icons" in sys.argv:
         return
+    from logging.handlers import RotatingFileHandler
+    handler = RotatingFileHandler(LOG_FILE, maxBytes=256 * 1024, backupCount=1, encoding="utf-8")
+    handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s", "%Y-%m-%d %H:%M:%S"))
+    log.addHandler(handler)
+    log.setLevel(logging.INFO)
     server = claim_single_instance()
     if server is None:
         return
@@ -2286,6 +2359,7 @@ def main():
         ctypes.windll.shcore.SetProcessDpiAwareness(1)
     except Exception:
         pass
+    log.info("inicio: Claude Usage %s (%s, idioma %s)", APP_VERSION, "exe" if FROZEN else "py", LANG)
     root = tk.Tk()
     App(root, server)
     root.mainloop()
