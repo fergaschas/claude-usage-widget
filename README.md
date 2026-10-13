@@ -32,6 +32,10 @@ A Windows desktop widget that shows **how much of your Claude plan you've used**
 - **English and Spanish**: follows your Windows language and can be switched at any time from the menu (*Idioma / Language*).
 - **In-app updates**: the app checks GitHub for new releases and shows *Version X available · Update*. One click downloads the installer, verifies its SHA-256 checksum and restarts the app on the new version, keeping your history, settings, shortcuts and start-with-Windows choice. You can also use *Check for updates* in the menu.
 
+<img src="docs/full-window-en.png" alt="Full window with usage limits, history chart and Claude Code tokens" width="426">
+
+*Full window (double-click the widget): limits with pace forecast, 24-hour / 7-day history and Claude Code tokens.*
+
 ## Installation
 
 1. Download **[`ClaudeUsage-Setup.exe`](../../releases/latest/download/ClaudeUsage-Setup.exe)** (latest version) or pick one from [Releases](../../releases).

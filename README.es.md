@@ -32,6 +32,10 @@ Widget de escritorio para Windows que muestra **cuánto has usado de tu plan de 
 - **Español e inglés**: usa el idioma de Windows y se puede cambiar en cualquier momento desde el menú (*Idioma / Language*).
 - **Actualizaciones desde la app**: comprueba en GitHub si hay versiones nuevas y muestra *Nueva versión X disponible · Actualizar*. Con un clic descarga el instalador, verifica su suma SHA-256 y reinicia la app ya actualizada, conservando el historial, los ajustes, los accesos directos y el inicio con Windows. También puedes usar *Buscar actualizaciones* en el menú.
 
+<img src="docs/full-window-es.png" alt="Ventana completa con los límites de uso, el gráfico de historial y los tokens de Claude Code" width="426">
+
+*Ventana completa (doble clic en el widget): límites con previsión de ritmo, historial de 24 h / 7 días y tokens de Claude Code.*
+
 ## Instalación
 
 1. Descarga **[`ClaudeUsage-Setup.exe`](../../releases/latest/download/ClaudeUsage-Setup.exe)** (última versión) o elige una en [Releases](../../releases).
