@@ -1,5 +1,7 @@
 # Claude Usage
 
+[English](README.en.md) · **Español**
+
 Widget de escritorio para Windows que muestra **cuánto has usado de tu plan de Claude** (sesión de 5 h y límite semanal) y cuánto te queda, siempre a la vista.
 
 > Proyecto no oficial, sin relación con Anthropic.
