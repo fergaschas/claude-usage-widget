@@ -4,6 +4,7 @@ Se empaqueta con PyInstaller junto a ClaudeUsage.exe (como datos) para obtener u
 ClaudeUsage-Setup.exe. Instala por usuario, sin permisos de administrador.
 
 Uso silencioso: ClaudeUsage-Setup.exe --silent [--dir RUTA] [--no-desktop] [--no-autostart] [--no-launch]
+  --update: lo usa la app al actualizarse; conserva el acceso directo y el inicio con Windows actuales.
 Idioma: el de Windows; se puede forzar con --lang es|en.
 """
 
@@ -143,6 +144,21 @@ def register(exe, autostart):
             winreg.SetValueEx(k, name, 0, winreg.REG_DWORD, value)
 
 
+def current_shortcut_and_autostart():
+    """(¿hay acceso directo en el escritorio?, ¿arranca con Windows?) en la instalación actual."""
+    import ctypes
+    buf = ctypes.create_unicode_buffer(260)
+    ctypes.windll.shell32.SHGetFolderPathW(None, 0x10, None, 0, buf)  # CSIDL_DESKTOPDIRECTORY
+    desktop = (Path(buf.value) / f"{APP_NAME}.lnk").exists()
+    try:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, RUN_KEY) as k:
+            winreg.QueryValueEx(k, APP_NAME)
+            autostart = True
+    except OSError:
+        autostart = False
+    return desktop, autostart
+
+
 def launch(exe):
     # un .exe de PyInstaller lanzado desde otro debe empezar con su propio entorno
     env = {**os.environ, "PYINSTALLER_RESET_ENVIRONMENT": "1"}
@@ -155,7 +171,14 @@ def install(target, desktop, autostart, log=print):
     log(tr("step.copy"))
     target.mkdir(parents=True, exist_ok=True)
     exe = target / EXE
-    shutil.copy2(PAYLOAD, exe)
+    for attempt in range(20):  # el .exe anterior puede tardar un momento en liberarse al cerrarse
+        try:
+            shutil.copy2(PAYLOAD, exe)
+            break
+        except PermissionError:
+            if attempt == 19:
+                raise
+            time.sleep(0.5)
     log(tr("step.links"))
     make_shortcuts(exe, desktop)
     log(tr("step.register"))
@@ -273,9 +296,15 @@ def main():
         LANG = args[args.index("--lang") + 1]
     if "--silent" in args:
         target = Path(args[args.index("--dir") + 1]) if "--dir" in args else (existing_dir() or DEFAULT_DIR)
+        if "--update" in args:  # actualización desde la app: respetar lo que el usuario ya tiene
+            desktop, autostart = current_shortcut_and_autostart()
+        else:
+            desktop, autostart = "--no-desktop" not in args, "--no-autostart" not in args
         try:
-            exe = install(target, "--no-desktop" not in args, "--no-autostart" not in args, log=lambda _: None)
+            exe = install(target, desktop, autostart, log=lambda _: None)
         except Exception:
+            if "--update" in args and (target / EXE).exists():  # no dejar al usuario sin la app
+                launch(target / EXE)
             sys.exit(1)
         if "--no-launch" not in args:
             launch(exe)

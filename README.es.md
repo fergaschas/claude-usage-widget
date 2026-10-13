@@ -22,6 +22,7 @@ Widget de escritorio para Windows que muestra **cuánto has usado de tu plan de 
 - **Ventana completa** (doble clic en el widget) con un gráfico del historial de 24 h o 7 días y los tokens de Claude Code por día, modelo y proyecto.
 - **Exportación del historial a CSV**, arranque con Windows y un instalador que no necesita permisos de administrador.
 - **Español e inglés**: usa el idioma de Windows y se puede cambiar en cualquier momento desde el menú (*Idioma / Language*).
+- **Actualizaciones desde la app**: comprueba en GitHub si hay versiones nuevas y muestra *Nueva versión X disponible · Actualizar*. Con un clic descarga el instalador, verifica su suma SHA-256 y reinicia la app ya actualizada, conservando el historial, los ajustes, los accesos directos y el inicio con Windows. También puedes usar *Buscar actualizaciones* en el menú.
 
 ## Instalación
 

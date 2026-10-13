@@ -13,6 +13,7 @@ import csv
 import json
 import os
 import queue
+import re
 import socket
 import struct
 import subprocess
@@ -55,6 +56,7 @@ TOKEN_SCAN_MS = 5 * 60_000
 THRESHOLDS = (75, 90, 100)
 RATE_LIMIT_WAIT = 300  # s de espera tras un 429
 DEFAULTS = {"on_top": True, "notify": True, "interval": 60, "details": False, "chart_hours": 24,
+            "check_updates": True,
             "mode": "widget", "alpha": 1.0, "widget_style": "large", "lang": None}
 
 LEGACY_KEYS = {
@@ -119,6 +121,19 @@ STRINGS = {
                          "y el historial de uso.",
         "uninstall.done": "Claude Usage se ha desinstalado.",
         "menu.account": "Cuenta de Claude…", "status.account": "Cuenta: {account}",
+        "menu.check_updates": "Buscar actualizaciones", "menu.auto_updates": "Avisar de nuevas versiones",
+        "update.available": "⬆  Nueva versión {version} disponible · Actualizar",
+        "update.ask_title": "Actualizar Claude Usage",
+        "update.ask": "¿Instalar la versión {version} ahora? (tienes la {current})\n\nLa app se cerrará un "
+                      "momento y volverá a abrirse. Tu historial y tus ajustes se conservan.\n\nNovedades:\n{notes}",
+        "update.downloading": "Descargando actualización… {pct}%",
+        "update.installing": "Instalando la actualización…",
+        "update.failed": "No se pudo actualizar: {e}",
+        "update.latest": "Tienes la última versión ({version}).",
+        "update.check_failed": "No se pudo comprobar si hay actualizaciones.",
+        "update.toast_title": "Claude Usage {version} disponible",
+        "update.toast_body": "Abre la app y pulsa «Actualizar» para instalarla en un clic.",
+        "update.done": "Claude Usage se ha actualizado a la versión {version}.",
         "cta.connect": "⚠  Sin conexión con Claude · Conectar →",
         "connect.title": "Conectar con Claude", "connect.heading": "Conecta tu cuenta de Claude",
         "connect.intro": "Claude Usage lee tu uso a través de Claude Code, la herramienta oficial de Anthropic. "
@@ -201,6 +216,19 @@ STRINGS = {
                          "will be removed.",
         "uninstall.done": "Claude Usage has been uninstalled.",
         "menu.account": "Claude account…", "status.account": "Account: {account}",
+        "menu.check_updates": "Check for updates", "menu.auto_updates": "Notify about new versions",
+        "update.available": "⬆  Version {version} available · Update",
+        "update.ask_title": "Update Claude Usage",
+        "update.ask": "Install version {version} now? (you have {current})\n\nThe app will close for a moment "
+                      "and reopen. Your history and settings are kept.\n\nWhat's new:\n{notes}",
+        "update.downloading": "Downloading update… {pct}%",
+        "update.installing": "Installing the update…",
+        "update.failed": "Update failed: {e}",
+        "update.latest": "You're on the latest version ({version}).",
+        "update.check_failed": "Couldn't check for updates.",
+        "update.toast_title": "Claude Usage {version} available",
+        "update.toast_body": "Open the app and click “Update” to install it in one click.",
+        "update.done": "Claude Usage was updated to version {version}.",
         "cta.connect": "⚠  Not connected to Claude · Connect →",
         "connect.title": "Connect to Claude", "connect.heading": "Connect your Claude account",
         "connect.intro": "Claude Usage reads your usage through Claude Code, Anthropic's official tool. "
@@ -749,6 +777,9 @@ class Widget:
         self.cta = tk.Button(self.inner, text=tr("cta.connect"), command=app.open_connect, bd=0, cursor="hand2",
                              bg=BG, fg=AMBER, activebackground=CARD, activeforeground=AMBER, anchor="w",
                              font=(FONT_B, 10 if big else 9), padx=0)
+        self.update_btn = tk.Button(self.inner, command=app.start_update, bd=0, cursor="hand2", bg=BG, fg=ACCENT,
+                                    activebackground=CARD, activeforeground=ACCENT, anchor="w",
+                                    font=(FONT_B, 10 if big else 9), padx=0)
         self.table = tk.Frame(self.inner, bg=BG)
         self.table.pack(fill="x", pady=(6 if big else 4, 0))
         self.placeholder = tk.Label(self.table, text=tr("loading"), bg=BG, fg=MUTED, font=(FONT, 10))
@@ -805,7 +836,12 @@ class Widget:
         self.win.attributes("-alpha", alpha)
 
     # ── dibujo ──
-    def render(self, limits, history, error):
+    def render(self, limits, history, error, update_text=None):
+        if update_text:
+            self.update_btn.config(text=update_text)
+            self.update_btn.pack(fill="x", before=self.table, pady=(6, 0))
+        else:
+            self.update_btn.pack_forget()
         self.dot.config(fg=AMBER if error else ACCENT)
         disconnected = bool(error and error[0] in AUTH_ERRORS)
         if disconnected:
@@ -1431,6 +1467,66 @@ class ConnectWindow:
         self.app.connect_win = None
 
 
+# ───────────────────────── actualizaciones ─────────────────────────
+
+GITHUB_REPO = "fergaschas/claude-usage-widget"
+# se puede apuntar a otro servidor para probar el flujo de actualización
+UPDATE_API = os.environ.get("CLAUDE_USAGE_UPDATE_URL") or f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+UPDATE_EVERY_MS = 6 * 3600 * 1000
+SETUP_ASSET = "claudeusage-setup.exe"
+
+
+def version_tuple(version):
+    return tuple(int(n) for n in re.findall(r"\d+", version)[:4])
+
+
+def fetch_latest_release():
+    """Última Release publicada: {version, page, url, size, digest, notes}, o None si no tiene instalador."""
+    req = urllib.request.Request(UPDATE_API, headers={"Accept": "application/vnd.github+json",
+                                                      "User-Agent": f"claude-usage-tracker/{APP_VERSION}"})
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+    asset = next((a for a in data.get("assets", []) if a.get("name", "").lower() == SETUP_ASSET), None)
+    if not asset:
+        return None
+    return {"version": data["tag_name"].lstrip("vV"), "page": data.get("html_url", ""),
+            "url": asset["browser_download_url"], "size": asset.get("size") or 0,
+            "digest": asset.get("digest") or "", "notes": data.get("body") or ""}
+
+
+def download_update(info, progress):
+    """Descarga el instalador y comprueba tamaño y SHA-256 (si GitHub lo publica). Devuelve su ruta."""
+    import hashlib
+    import tempfile
+    dest = Path(tempfile.gettempdir()) / f"ClaudeUsage-Setup-{info['version']}.exe"
+    sha, done = hashlib.sha256(), 0
+    req = urllib.request.Request(info["url"], headers={"User-Agent": f"claude-usage-tracker/{APP_VERSION}"})
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp, open(dest, "wb") as f:
+            while chunk := resp.read(256 * 1024):
+                f.write(chunk)
+                sha.update(chunk)
+                done += len(chunk)
+                progress(min(99, done * 100 // max(info["size"], 1)))
+        if info["size"] and done != info["size"]:
+            raise ValueError(f"size {done} != {info['size']}")
+        if info["digest"].startswith("sha256:") and sha.hexdigest() != info["digest"][7:].lower():
+            raise ValueError("SHA-256")
+    except Exception:
+        dest.unlink(missing_ok=True)
+        raise
+    return dest
+
+
+def cleanup_old_setups():
+    import tempfile
+    for f in Path(tempfile.gettempdir()).glob("ClaudeUsage-Setup-*.exe"):
+        try:
+            f.unlink()
+        except OSError:
+            pass  # el instalador que nos acaba de actualizar puede seguir abierto
+
+
 class App:
     def __init__(self, root, server):
         self.root = root
@@ -1470,6 +1566,8 @@ class App:
             except OSError:
                 pass
         self.interval = tk.IntVar(value=self.settings["interval"])
+        self.auto_updates = tk.BooleanVar(value=self.settings["check_updates"])
+        self.update_info = self.update_state = None
         root.attributes("-topmost", self.on_top.get())
 
         self._build()
@@ -1477,6 +1575,8 @@ class App:
         self.tray = Tray(lambda cmd: self.events.put(("tray", cmd)))
         self.show_mode(self.settings["mode"])
         threading.Thread(target=lambda: self.events.put(("connect", check_connection())), daemon=True).start()
+        self._after_update()
+        self.root.after(8000, self._auto_check_updates)
         if not self.settings.get("onboarded") and not self.history.points:  # instalación nueva
             self.open_connect()
         if server:
@@ -1510,6 +1610,9 @@ class App:
         self.status = tk.Label(self.root, bg=BG, fg=MUTED, font=(FONT, 8), anchor="w", padx=12, pady=6,
                                justify="left")
         self.status.pack(fill="x", side="bottom")
+        self.update_btn = tk.Button(self.root, command=self.start_update, bd=0, cursor="hand2", bg=BG, fg=ACCENT,
+                                    activebackground=CARD, activeforeground=ACCENT, anchor="w",
+                                    font=(FONT_B, 10), padx=12)
         self.connect_btn = tk.Button(self.root, text=tr("cta.connect"), command=self.open_connect, bd=0,
                                      cursor="hand2", bg=BG, fg=AMBER, activebackground=CARD,
                                      activeforeground=AMBER, anchor="w", font=(FONT_B, 10), padx=12)
@@ -1580,6 +1683,9 @@ class App:
         m.add_command(label=tr("menu.test"), command=lambda: toast(APP_NAME, tr("test.body")))
         m.add_command(label=tr("menu.folder"), command=lambda: os.startfile(APP_DIR))
         m.add_separator()
+        m.add_command(label=tr("menu.check_updates"), command=lambda: self.check_updates(manual=True))
+        m.add_checkbutton(label=tr("menu.auto_updates"), variable=self.auto_updates, command=self.save)
+        m.add_separator()
         m.add_command(label=tr("quit"), command=self.quit)
 
     # ── acciones ──
@@ -1606,6 +1712,104 @@ class App:
         self.settings["widget_style"] = self.style.get()
         self._rebuild_widget()
         self.save()
+
+    # ── actualizaciones ──
+    def _after_update(self):
+        """Primer arranque tras actualizar: avisar y limpiar el instalador descargado."""
+        cleanup_old_setups()
+        last = self.settings.get("last_version")
+        if last and version_tuple(APP_VERSION) > version_tuple(last):
+            toast(APP_NAME, tr("update.done", version=APP_VERSION))
+        if last != APP_VERSION:
+            self.settings["last_version"] = APP_VERSION
+            self.save()
+
+    def _auto_check_updates(self):
+        if self.auto_updates.get():
+            self.check_updates()
+        self.root.after(UPDATE_EVERY_MS, self._auto_check_updates)
+
+    def check_updates(self, manual=False):
+        def work():
+            try:
+                self.events.put(("update_check", (fetch_latest_release(), manual, False)))
+            except Exception:
+                self.events.put(("update_check", (None, manual, True)))
+        threading.Thread(target=work, daemon=True).start()
+
+    def _on_update_check(self, info, manual, failed):
+        if info and version_tuple(info["version"]) > version_tuple(APP_VERSION):
+            self.update_info = info
+            if not manual and self.settings.get("update_notified") != info["version"]:
+                self.settings["update_notified"] = info["version"]
+                self.save()
+                toast(tr("update.toast_title", version=info["version"]), tr("update.toast_body"))
+            self.render()
+            if manual:
+                self.start_update()
+        elif manual:
+            from tkinter import messagebox
+            self._dialog(messagebox.showinfo, APP_NAME,
+                         tr("update.check_failed") if failed else tr("update.latest", version=APP_VERSION))
+
+    def _update_text(self):
+        if self.update_state and self.update_state[0] == "downloading":
+            return tr("update.downloading", pct=self.update_state[1])
+        if self.update_state:
+            return tr("update.installing")
+        if self.update_info:
+            return tr("update.available", version=self.update_info["version"])
+        return None
+
+    def _dialog(self, fn, title, message):
+        """Muestra un cuadro de diálogo por delante del widget (que está siempre encima)."""
+        self.widget.win.attributes("-topmost", False)
+        try:
+            return fn(title, message, parent=self.root if self.root.state() == "normal" else self.widget.win)
+        finally:
+            self.widget.win.attributes("-topmost", self.on_top.get())
+
+    def start_update(self):
+        from tkinter import messagebox
+        info = self.update_info
+        if not info or self.update_state:
+            return
+        if not FROZEN:  # ejecutando desde el código: no hay .exe que sustituir
+            webbrowser.open(info["page"])
+            return
+        notes = re.sub(r"[*_`#>]", "", info["notes"]).strip()
+        notes = notes[:600] + ("…" if len(notes) > 600 else "")
+        if not self._dialog(messagebox.askyesno, tr("update.ask_title"),
+                            tr("update.ask", version=info["version"], current=APP_VERSION, notes=notes)):
+            return
+        self.update_state = ("downloading", 0)
+        self.render()
+
+        def work():
+            last = [-1]
+
+            def progress(pct):
+                if pct != last[0]:
+                    last[0] = pct
+                    self.events.put(("update_progress", pct))
+            try:
+                self.events.put(("update_ready", str(download_update(info, progress))))
+            except Exception as e:
+                self.events.put(("update_failed", str(e) or e.__class__.__name__))
+        threading.Thread(target=work, daemon=True).start()
+
+    def _install_update(self, setup):
+        """Lanza el instalador en modo silencioso; él cierra esta app, sustituye el .exe y la vuelve a abrir."""
+        self.update_state = ("installing",)
+        self.render()
+        env = {**os.environ, "PYINSTALLER_RESET_ENVIRONMENT": "1"}
+        try:
+            subprocess.Popen([setup, "--silent", "--update", "--dir", str(APP_DIR)], env=env, cwd=Path(setup).parent,
+                             creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP)
+        except OSError as e:
+            self.update_state = None
+            self.render()
+            toast(APP_NAME, tr("update.failed", e=e))
 
     def open_connect(self):
         if self.connect_win:
@@ -1703,7 +1907,8 @@ class App:
             self.status.config(text=tr("err.export", e=e), fg=AMBER)
 
     def save(self):
-        self.settings.update(on_top=self.on_top.get(), notify=self.notify.get(), interval=self.interval.get())
+        self.settings.update(on_top=self.on_top.get(), notify=self.notify.get(), interval=self.interval.get(),
+                             check_updates=self.auto_updates.get())
         try:
             SETTINGS_FILE.write_text(json.dumps(self.settings, indent=1), encoding="utf-8")
         except OSError:
@@ -1819,6 +2024,17 @@ class App:
                 self._on_connection(payload)
             elif kind == "show":
                 self.show_mode(self.settings["mode"])
+            elif kind == "update_check":
+                self._on_update_check(*payload)
+            elif kind == "update_progress":
+                self.update_state = ("downloading", payload)
+                self.render()
+            elif kind == "update_ready":
+                self._install_update(payload)
+            elif kind == "update_failed":
+                self.update_state = None
+                self.render()
+                toast(APP_NAME, tr("update.failed", e=payload))
             elif kind == "quit":
                 self.quit()
             elif kind == "tray":
@@ -1895,7 +2111,13 @@ class App:
         else:
             note = tr("loading")
 
-        self.widget.render(limits, self.history, self.error)
+        update_text = self._update_text()
+        self.widget.render(limits, self.history, self.error, update_text)
+        if update_text:
+            self.update_btn.config(text=update_text)
+            self.update_btn.pack(fill="x", side="bottom")
+        else:
+            self.update_btn.pack_forget()
         tip = " · ".join(f"{short(lim['kind'])} {lim['pct']:.0f}%" for lim in limits)
         self.tray.set_tip(f"Claude · {tip}" if tip else APP_NAME)
 
