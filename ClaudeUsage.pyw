@@ -30,6 +30,7 @@ from datetime import datetime
 from pathlib import Path
 
 APP_NAME = "Claude Usage"
+APP_VERSION = "2.5"
 APP_ID = "ClaudeUsage.Tracker"
 FROZEN = getattr(sys, "frozen", False)  # empaquetado como .exe con PyInstaller
 APP_FILE = Path(sys.executable if FROZEN else __file__).resolve()
@@ -125,6 +126,12 @@ STRINGS = {
         "connect.checking": "Comprobando…",
         "step.install": "Instalar Claude Code", "step.install.ok": "Claude Code instalado",
         "step.install.version": "Versión {version}",
+        "step.install.desktop": "incluido en la app de escritorio de Claude",
+        "step.install.wsl": "Instalado en WSL ({distro})",
+        "step.install.found": "Se ha encontrado su sesión en este PC",
+        "step.login.found": "Sesión de Claude Code encontrada en este PC",
+        "step.login.wsl": "Sesión de Claude Code en WSL ({distro})",
+        "btn.diag": "Copiar diagnóstico", "diag.copied": "Diagnóstico copiado ✓",
         "step.install.detail": "Es gratuito y se instala en un minuto.",
         "step.install.wait": "Sigue los pasos de la ventana de instalación. Esto se actualizará solo.",
         "btn.install": "Instalar",
@@ -201,6 +208,12 @@ STRINGS = {
         "connect.checking": "Checking…",
         "step.install": "Install Claude Code", "step.install.ok": "Claude Code installed",
         "step.install.version": "Version {version}",
+        "step.install.desktop": "bundled with the Claude desktop app",
+        "step.install.wsl": "Installed in WSL ({distro})",
+        "step.install.found": "Its session was found on this PC",
+        "step.login.found": "Claude Code session found on this PC",
+        "step.login.wsl": "Claude Code session in WSL ({distro})",
+        "btn.diag": "Copy diagnostics", "diag.copied": "Diagnostics copied ✓",
         "step.install.detail": "It's free and installs in a minute.",
         "step.install.wait": "Follow the steps in the installer window. This will update by itself.",
         "btn.install": "Install",
@@ -276,7 +289,7 @@ def fetch_usage():
     req = urllib.request.Request(USAGE_URL, headers={
         "Authorization": f"Bearer {oauth['accessToken']}",
         "anthropic-beta": "oauth-2025-04-20",
-        "User-Agent": "claude-usage-tracker/2.0",
+        "User-Agent": f"claude-usage-tracker/{APP_VERSION}",
     })
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
@@ -1062,26 +1075,103 @@ class Tray:
 AUTH_ERRORS = ("err.no_session", "err.token")
 
 
-def find_claude():
-    """Ruta de la CLI de Claude Code, o None. Relee el PATH del registro por si se acaba de instalar."""
-    import shutil
+ENV_KEYS = ((winreg.HKEY_CURRENT_USER, "Environment"),
+            (winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment"))
+
+
+def _env(name):
+    """Variable de entorno actual o, si no está, la guardada en el registro (p. ej. recién creada)."""
+    if os.environ.get(name):
+        return os.environ[name]
+    for hive, key in ENV_KEYS:
+        try:
+            with winreg.OpenKey(hive, key) as k:
+                return os.path.expandvars(winreg.QueryValueEx(k, name)[0])
+        except OSError:
+            pass
+    return ""
+
+
+def _search_path():
+    """PATH del proceso más el del registro, por si Claude Code se acaba de instalar."""
     paths = [os.environ.get("PATH", "")]
-    for hive, key in ((winreg.HKEY_CURRENT_USER, "Environment"),
-                      (winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment")):
+    for hive, key in ENV_KEYS:
         try:
             with winreg.OpenKey(hive, key) as k:
                 paths.append(os.path.expandvars(winreg.QueryValueEx(k, "Path")[0]))
         except OSError:
             pass
-    found = shutil.which("claude", path=os.pathsep.join(paths))
+    return os.pathsep.join(paths)
+
+
+def claude_candidates():
+    """Ubicaciones conocidas de Claude Code en Windows, por orden de preferencia."""
+    home = Path.home()
+    local, roaming = Path(os.environ.get("LOCALAPPDATA", "")), Path(os.environ.get("APPDATA", ""))
+    program_files = Path(os.environ.get("ProgramFiles", r"C:\Program Files"))
+    out = [local / "Microsoft" / "WinGet" / "Links" / "claude.exe",  # winget
+           home / ".local" / "bin" / "claude.exe",                    # instalador nativo
+           roaming / "npm" / "claude.cmd",                            # npm
+           program_files / "nodejs" / "claude.cmd",
+           home / "scoop" / "shims" / "claude.exe",
+           home / ".bun" / "bin" / "claude.exe",
+           local / "Volta" / "bin" / "claude.exe"]
+    if _env("NVM_SYMLINK"):
+        out.append(Path(_env("NVM_SYMLINK")) / "claude.cmd")
+    # copia incluida en la app de escritorio de Claude (pestaña Code): la versión más reciente
+    bundled = sorted((roaming / "Claude" / "claude-code").glob("*/*/claude.exe"),
+                     key=lambda p: p.stat().st_mtime, reverse=True)
+    return out + bundled
+
+
+def find_claude():
+    """Ruta de Claude Code (CLI o la incluida en la app de escritorio), o None."""
+    import shutil
+    found = shutil.which("claude", path=_search_path())
     if found:
         return found
-    local, roaming = Path(os.environ.get("LOCALAPPDATA", "")), Path(os.environ.get("APPDATA", ""))
-    for candidate in (local / "Microsoft" / "WinGet" / "Links" / "claude.exe",
-                      Path.home() / ".local" / "bin" / "claude.exe", roaming / "npm" / "claude.cmd"):
-        if candidate.exists():
-            return str(candidate)
-    return None
+    return next((str(c) for c in claude_candidates() if c.exists()), None)
+
+
+def claude_source(claude):
+    return "desktop" if claude and r"\Claude\claude-code" in claude else "cli"
+
+
+_wsl_cache = [0.0, None]
+
+
+def wsl_credentials():
+    """(ruta, distro) de unas credenciales de Claude Code dentro de WSL, o None. Se cachea 2 min
+    porque consultar WSL puede arrancar la distribución."""
+    if time.time() - _wsl_cache[0] < 120:
+        return _wsl_cache[1]
+    result = None
+    try:
+        out = subprocess.run(["wsl.exe", "-l", "-q"], capture_output=True, timeout=15,
+                             creationflags=subprocess.CREATE_NO_WINDOW)
+        distros = [d.strip() for d in out.stdout.decode("utf-16-le", "ignore").replace("\0", "").splitlines()
+                   if d.strip()]
+        for distro in distros:
+            root = Path(rf"\\wsl.localhost\{distro}")
+            hits = list((root / "home").glob("*/.claude/.credentials.json"))
+            hits += [p for p in (root / "root" / ".claude" / ".credentials.json",) if p.exists()]
+            if hits:
+                result = (hits[0], distro)
+                break
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    _wsl_cache[:] = [time.time(), result]
+    return result
+
+
+def find_credentials(status=None):
+    """(ruta de .credentials.json, distro WSL o None). Si no hay ninguna, la ruta por defecto."""
+    dirs = [Path(d) for d in (_env("CLAUDE_CONFIG_DIR"), (status or {}).get("configDirectory")) if d]
+    dirs.append(Path.home() / ".claude")
+    for d in dirs:
+        if (d / ".credentials.json").exists():
+            return d / ".credentials.json", None
+    return wsl_credentials() or (Path.home() / ".claude" / ".credentials.json", None)
 
 
 def auth_status(claude):
@@ -1106,7 +1196,28 @@ def claude_version(claude):
 def check_connection():
     claude = find_claude()
     status = auth_status(claude) if claude else None
-    return {"claude": claude, "status": status, "version": claude_version(claude) if claude else ""}
+    creds, wsl = find_credentials(status)
+    return {"claude": claude, "source": claude_source(claude), "status": status,
+            "version": claude_version(claude) if claude else "", "creds": creds, "wsl": wsl,
+            "creds_ok": creds.exists()}
+
+
+def diagnostics(info):
+    """Texto para pegar en una incidencia: qué se ha buscado y qué se ha encontrado (sin datos de la cuenta)."""
+    import platform
+    status = (info or {}).get("status") or {}
+    lines = [f"Claude Usage {APP_VERSION} · Windows {platform.version()} · {'exe' if FROZEN else 'py'}",
+             f"claude: {(info or {}).get('claude')} ({(info or {}).get('source')}) {(info or {}).get('version')}",
+             f"auth status: loggedIn={status.get('loggedIn')} authMethod={status.get('authMethod')}",
+             f"credentials: {(info or {}).get('creds')} exists={(info or {}).get('creds_ok')} "
+             f"wsl={(info or {}).get('wsl')}",
+             f"CLAUDE_CONFIG_DIR={_env('CLAUDE_CONFIG_DIR') or '-'}",
+             "candidates:"]
+    lines += [f"  [{'x' if c.exists() else ' '}] {c}" for c in claude_candidates()]
+    lines.append("PATH (claude/node/npm):")
+    lines += [f"  {p}" for p in _search_path().split(os.pathsep)
+              if any(k in p.lower() for k in ("claude", "node", "npm", "bun", "scoop", "volta", ".local"))]
+    return "\n".join(lines)
 
 
 def account_text(status):
@@ -1192,6 +1303,9 @@ class ConnectWindow:
         footer.pack(fill="x", side="bottom", pady=(8, 0))
         self.main_btn = tk.Button(footer, bd=0, cursor="hand2", padx=16, pady=6, command=self.finish)
         self.main_btn.pack(side="right")
+        self.diag_btn = tk.Button(footer, text=tr("btn.diag"), command=self.copy_diagnostics, bd=0, cursor="hand2",
+                                  bg=BG, fg=MUTED, activebackground=BG, activeforeground=FG, font=(FONT, 8), padx=0)
+        self.diag_btn.pack(side="left", anchor="s")
         self._set_done(False)
         for row in self.steps:
             row.set("wait", tr("connect.checking"))
@@ -1215,21 +1329,33 @@ class ConnectWindow:
         self.checking = False
         self.info = info
         claude, status = info["claude"], info["status"] or {}
+        wsl, creds_ok = info.get("wsl"), info.get("creds_ok")
         install, login, usage = self.steps
 
         if claude:
             version = info.get("version")
-            install.set("ok", tr("step.install.ok"), tr("step.install.version", version=version) if version else "")
+            parts = [tr("step.install.version", version=version) if version else "",
+                     tr("step.install.desktop") if info.get("source") == "desktop" else ""]
+            install.set("ok", tr("step.install.ok"), " · ".join(p for p in parts if p))
+        elif wsl:
+            install.set("ok", tr("step.install.ok"), tr("step.install.wsl", distro=wsl))
+        elif creds_ok:  # no se encuentra el ejecutable, pero sí su sesión: basta para leer el uso
+            install.set("ok", tr("step.install.ok"), tr("step.install.found"))
         elif self.install_started:
             install.set("wait", tr("step.install"), tr("step.install.wait"), tr("btn.install"), self.install)
         else:
             install.set("todo", tr("step.install"), tr("step.install.detail"), tr("btn.install"), self.install)
 
-        logged = bool(claude and status.get("loggedIn") and status.get("authMethod") == "claude.ai")
-        if not claude:
-            login.set("todo", tr("step.login"), tr("step.login.need_install"))
-        elif logged:
+        cli_logged = bool(claude and status.get("loggedIn") and status.get("authMethod") == "claude.ai")
+        logged = cli_logged or bool(creds_ok and not (claude and status.get("loggedIn") is False))
+        if cli_logged:
             login.set("ok", tr("step.login.ok"), account_text(status), tr("btn.switch"), self.login)
+        elif logged:
+            login.set("ok", tr("step.login.ok"),
+                      tr("step.login.wsl", distro=wsl) if wsl else tr("step.login.found"),
+                      tr("btn.switch") if claude else None, self.login)
+        elif not claude:
+            login.set("todo", tr("step.login"), tr("step.login.need_install"))
         elif status.get("loggedIn"):
             login.set("error", tr("step.login.api"), tr("step.login.api_detail"), tr("btn.login"), self.login)
         elif self.login_started:
@@ -1284,6 +1410,13 @@ class ConnectWindow:
         self.login_started = True
         run_in_console(f'"{claude}" auth login --claudeai')
         self.steps[1].set("wait", tr("step.login"), tr("step.login.wait"), tr("btn.login"), self.login)
+
+    def copy_diagnostics(self):
+        self.win.clipboard_clear()
+        self.win.clipboard_append(diagnostics(self.info))
+        self.diag_btn.config(text=tr("diag.copied"), fg=GREEN)
+        self.win.after(2500, lambda: self.diag_btn.winfo_exists() and self.diag_btn.config(text=tr("btn.diag"),
+                                                                                           fg=MUTED))
 
     def finish(self):
         self.app.settings["onboarded"] = True
@@ -1483,6 +1616,11 @@ class App:
             self.connect_win = ConnectWindow(self)
 
     def _on_connection(self, info):
+        global CREDENTIALS
+        if info.get("creds_ok") and info["creds"] != CREDENTIALS:  # p. ej. en WSL o en CLAUDE_CONFIG_DIR
+            CREDENTIALS = info["creds"]
+            if self.error and self.error[0] in AUTH_ERRORS:
+                self.refresh()
         status = info["status"] or {}
         self.account = account_text(status) if status.get("loggedIn") else None
         if self.connect_win:
