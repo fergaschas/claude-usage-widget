@@ -53,21 +53,153 @@ TOKEN_SCAN_MS = 5 * 60_000
 THRESHOLDS = (75, 90, 100)
 RATE_LIMIT_WAIT = 300  # s de espera tras un 429
 DEFAULTS = {"on_top": True, "notify": True, "interval": 60, "details": False, "chart_hours": 24,
-            "mode": "widget", "alpha": 1.0, "widget_style": "large"}
+            "mode": "widget", "alpha": 1.0, "widget_style": "large", "lang": None}
 
-LABELS = {
-    "session": "Sesión (5 h)",
-    "weekly_all": "Semanal · todos los modelos",
-    "weekly_opus": "Semanal · Opus",
-    "weekly_sonnet": "Semanal · Sonnet",
-}
 LEGACY_KEYS = {
     "five_hour": "session",
     "seven_day": "weekly_all",
     "seven_day_opus": "weekly_opus",
     "seven_day_sonnet": "weekly_sonnet",
 }
-DAYS = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"]
+
+# ───────────────────────── idiomas ─────────────────────────
+
+STRINGS = {
+    "es": {
+        "days": ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"],
+        "label.session": "Sesión (5 h)", "label.weekly_all": "Semanal · todos los modelos",
+        "label.weekly_opus": "Semanal · Opus", "label.weekly_sonnet": "Semanal · Sonnet",
+        "short.session": "Sesión", "short.weekly_all": "Semana",
+        "short.weekly_opus": "Opus", "short.weekly_sonnet": "Sonnet",
+        "err.no_session": "No se encontró la sesión de Claude Code. Inicia sesión con `claude`.",
+        "err.token": "Token caducado: abre Claude Code un momento para renovarlo.",
+        "err.ratelimit": "Anthropic limita las consultas por ahora; reintento en {min} min.",
+        "err.fetch": "No se pudo consultar el uso ({name}).",
+        "when.today": "a las {time}", "when.other": "el {day} a las {time}",
+        "reset.done": "reiniciado", "reset.in": "reinicia en {left} ({stamp})", "reset.short_done": "ya",
+        "pace.limit": "Límite alcanzado: espera al reinicio", "pace.idle": "Sin consumo en la última hora",
+        "pace.unused": "Aún sin uso en esta ventana", "pace.day": "%/día",
+        "pace.speed": "Ritmo ≈ {value} {unit}", "pace.hit": "{speed} → límite {when}",
+        "pace.ok": "{speed} → no llegarás al límite",
+        "row.left": "Te queda {pct}%", "widget.left": "Quedan {pct}%", "widget.resets": "reinicia en {when}",
+        "loading": "Consultando…",
+        "tray.toggle": "Mostrar / ocultar widget", "tray.full": "Ventana completa",
+        "tray.refresh": "Actualizar ahora", "quit": "Salir",
+        "title": "Uso de Claude", "history": "Historial", "tokens.title": "Tokens en Claude Code (este PC)",
+        "tokens.scanning": "Analizando registros…", "details": "Historial y tokens",
+        "menu.widget": "Ver como widget", "menu.full": "Ver ventana completa",
+        "menu.hide": "Ocultar en la bandeja   Ctrl+Alt+U", "menu.on_top": "Siempre encima",
+        "menu.autostart": "Iniciar con Windows", "menu.notify": "Notificaciones",
+        "menu.interval": "Actualizar cada", "menu.style": "Estilo del widget",
+        "style.large": "Grande", "style.rings": "Anillos", "style.compact": "Compacto",
+        "menu.alpha": "Opacidad del widget", "menu.lang": "Idioma / Language",
+        "menu.open_web": "Abrir uso en claude.ai", "menu.export": "Exportar historial a CSV",
+        "menu.test": "Probar notificación", "test.body": "Las notificaciones funcionan correctamente.",
+        "menu.folder": "Abrir carpeta de la app",
+        "err.autostart": "No se pudo cambiar el inicio automático: {e}", "err.export": "No se pudo exportar: {e}",
+        "csv.file": "historial.csv", "csv.header": ["fecha", "limite", "porcentaje", "reinicio"],
+        "hint": "Sigo en la bandeja del sistema, junto al reloj. Haz clic en el icono{hotkey} para volver a verme.",
+        "hint.hotkey": " o pulsa Ctrl+Alt+U",
+        "alert.reset": "{label}: reiniciado", "alert.reset_body": "Vuelves a tener disponible el {pct}%.",
+        "alert.limit": "{label}: límite alcanzado", "alert.wait": "Espera al reinicio.",
+        "alert.used": "{label}: {pct}% usado", "alert.left": "Te queda un {pct}%.",
+        "extra": "Créditos extra: {pct}% del límite mensual", "status.limit": "Has alcanzado un límite.",
+        "status.margin": "Margen: {pct}% hasta el límite más cercano.",
+        "status.no_limits": "La API no devolvió límites para esta cuenta.",
+        "status.last": "Último dato: {time}",
+        "status.updated": "Actualizado {time} · la línea blanca marca el tiempo transcurrido",
+        "tokens.none": "Sin actividad de Claude Code en los últimos 7 días.",
+        "tokens.totals": "Hoy: {today}   ·   7 días: {week}",
+        "tokens.split": "Hoy → entrada {input} · salida {output} · caché {write} escr. / {read} lect.",
+        "tokens.models": "Modelos (7 d): {top}", "tokens.projects": "Proyectos (7 d): {top}",
+        "tokens.note": "La lectura de caché cuenta mucho menos para el límite que la salida.",
+        "uninstall.ask": "¿Desinstalar Claude Usage?\n\nSe quitarán los accesos directos, el inicio automático "
+                         "y el historial de uso.",
+        "uninstall.done": "Claude Usage se ha desinstalado.",
+    },
+    "en": {
+        "days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+        "label.session": "Session (5 h)", "label.weekly_all": "Weekly · all models",
+        "label.weekly_opus": "Weekly · Opus", "label.weekly_sonnet": "Weekly · Sonnet",
+        "short.session": "Session", "short.weekly_all": "Week",
+        "short.weekly_opus": "Opus", "short.weekly_sonnet": "Sonnet",
+        "err.no_session": "Claude Code session not found. Sign in with `claude`.",
+        "err.token": "Token expired: open Claude Code briefly to renew it.",
+        "err.ratelimit": "Anthropic is rate-limiting requests; retrying in {min} min.",
+        "err.fetch": "Couldn't fetch usage ({name}).",
+        "when.today": "at {time}", "when.other": "on {day} at {time}",
+        "reset.done": "reset", "reset.in": "resets in {left} ({stamp})", "reset.short_done": "now",
+        "pace.limit": "Limit reached: wait for the reset", "pace.idle": "No usage in the last hour",
+        "pace.unused": "No usage yet in this window", "pace.day": "%/day",
+        "pace.speed": "Pace ≈ {value} {unit}", "pace.hit": "{speed} → limit {when}",
+        "pace.ok": "{speed} → you won't hit the limit",
+        "row.left": "{pct}% left", "widget.left": "{pct}% left", "widget.resets": "resets in {when}",
+        "loading": "Loading…",
+        "tray.toggle": "Show / hide widget", "tray.full": "Full window",
+        "tray.refresh": "Refresh now", "quit": "Quit",
+        "title": "Claude usage", "history": "History", "tokens.title": "Claude Code tokens (this PC)",
+        "tokens.scanning": "Scanning logs…", "details": "History and tokens",
+        "menu.widget": "Show as widget", "menu.full": "Show full window",
+        "menu.hide": "Hide to tray   Ctrl+Alt+U", "menu.on_top": "Always on top",
+        "menu.autostart": "Start with Windows", "menu.notify": "Notifications",
+        "menu.interval": "Refresh every", "menu.style": "Widget style",
+        "style.large": "Large", "style.rings": "Rings", "style.compact": "Compact",
+        "menu.alpha": "Widget opacity", "menu.lang": "Idioma / Language",
+        "menu.open_web": "Open usage on claude.ai", "menu.export": "Export history to CSV",
+        "menu.test": "Test notification", "test.body": "Notifications are working.",
+        "menu.folder": "Open app folder",
+        "err.autostart": "Couldn't change start with Windows: {e}", "err.export": "Couldn't export: {e}",
+        "csv.file": "history.csv", "csv.header": ["date", "limit", "percent", "reset"],
+        "hint": "I'm still in the system tray, next to the clock. Click the icon{hotkey} to bring me back.",
+        "hint.hotkey": " or press Ctrl+Alt+U",
+        "alert.reset": "{label}: reset", "alert.reset_body": "You have {pct}% available again.",
+        "alert.limit": "{label}: limit reached", "alert.wait": "Wait for the reset.",
+        "alert.used": "{label}: {pct}% used", "alert.left": "{pct}% left.",
+        "extra": "Extra credits: {pct}% of the monthly limit", "status.limit": "You've reached a limit.",
+        "status.margin": "Headroom: {pct}% to the nearest limit.",
+        "status.no_limits": "The API returned no limits for this account.",
+        "status.last": "Last data: {time}",
+        "status.updated": "Updated {time} · the white line marks elapsed time",
+        "tokens.none": "No Claude Code activity in the last 7 days.",
+        "tokens.totals": "Today: {today}   ·   7 days: {week}",
+        "tokens.split": "Today → input {input} · output {output} · cache {write} write / {read} read",
+        "tokens.models": "Models (7 d): {top}", "tokens.projects": "Projects (7 d): {top}",
+        "tokens.note": "Cache reads count much less toward the limit than output.",
+        "uninstall.ask": "Uninstall Claude Usage?\n\nThe shortcuts, start with Windows and usage history "
+                         "will be removed.",
+        "uninstall.done": "Claude Usage has been uninstalled.",
+    },
+}
+LANGUAGES = (("es", "Español"), ("en", "English"))
+
+
+def system_lang():
+    """'es' si Windows está en español; si no, 'en'."""
+    try:
+        import ctypes
+        return "es" if ctypes.windll.kernel32.GetUserDefaultUILanguage() & 0x3FF == 0x0A else "en"
+    except Exception:
+        return "en"
+
+
+LANG = system_lang()
+
+
+def tr(key, **kw):
+    text = STRINGS[LANG].get(key, STRINGS["es"][key])
+    return text.format(**kw) if kw else text
+
+
+def label(kind):
+    return STRINGS[LANG].get(f"label.{kind}", kind.replace("_", " ").capitalize())
+
+
+def short(kind):
+    return STRINGS[LANG].get(f"short.{kind}", kind[:7])
+
+
+def day(i):
+    return tr("days")[i]
 
 # alto contraste: fondo casi negro, texto blanco, colores de estado saturados
 BG, CARD, FG, MUTED, TRACK, BORDER = "#111114", "#202026", "#ffffff", "#c8c8d2", "#34343e", "#4a4a55"
@@ -79,7 +211,9 @@ FONT, FONT_B = "Segoe UI", "Segoe UI Semibold"
 # ───────────────────────── datos ─────────────────────────
 
 class AuthError(Exception):
-    pass
+    def __init__(self, key, **kw):
+        super().__init__(key)
+        self.key, self.kw = key, kw
 
 
 class RateLimited(AuthError):
@@ -90,7 +224,7 @@ def fetch_usage():
     try:
         oauth = json.loads(CREDENTIALS.read_text(encoding="utf-8"))["claudeAiOauth"]
     except (OSError, KeyError, ValueError):
-        raise AuthError("No se encontró la sesión de Claude Code. Inicia sesión con `claude`.")
+        raise AuthError("err.no_session")
     req = urllib.request.Request(USAGE_URL, headers={
         "Authorization": f"Bearer {oauth['accessToken']}",
         "anthropic-beta": "oauth-2025-04-20",
@@ -101,9 +235,9 @@ def fetch_usage():
             return json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         if e.code in (401, 403):
-            raise AuthError("Token caducado: abre Claude Code un momento para renovarlo.")
+            raise AuthError("err.token")
         if e.code == 429:
-            raise RateLimited(f"Anthropic limita las consultas por ahora; reintento en {RATE_LIMIT_WAIT // 60} min.")
+            raise RateLimited("err.ratelimit", min=RATE_LIMIT_WAIT // 60)
         raise
 
 
@@ -258,8 +392,8 @@ def fmt_num(n):
 def fmt_when(epoch):
     local = datetime.fromtimestamp(epoch)
     if local.date() == datetime.now().date():
-        return f"a las {local:%H:%M}"
-    return f"el {DAYS[local.weekday()]} a las {local:%H:%M}"
+        return tr("when.today", time=f"{local:%H:%M}")
+    return tr("when.other", day=day(local.weekday()), time=f"{local:%H:%M}")
 
 
 def fmt_reset(epoch):
@@ -267,14 +401,14 @@ def fmt_reset(epoch):
         return ""
     secs = int(epoch - time.time())
     if secs <= 0:
-        return "reiniciado"
+        return tr("reset.done")
     d, rem = divmod(secs, 86400)
     h, rem = divmod(rem, 3600)
     m = rem // 60
     left = f"{d} d {h} h" if d else f"{h} h {m:02d} min" if h else f"{m} min"
     local = datetime.fromtimestamp(epoch)
-    stamp = f"{DAYS[local.weekday()]} {local:%H:%M}" if d else f"{local:%H:%M}"
-    return f"reinicia en {left} ({stamp})"
+    stamp = f"{day(local.weekday())} {local:%H:%M}" if d else f"{local:%H:%M}"
+    return tr("reset.in", left=left, stamp=stamp)
 
 
 def pretty_model(model):
@@ -294,20 +428,20 @@ def pace_info(lim, history):
     elapsed = min(max(now - (reset - total), 0), total)
     marker = 100 * elapsed / total
     if pct >= 100:
-        return "Límite alcanzado: espera al reinicio", RED, marker
+        return tr("pace.limit"), RED, marker
     # sesión: ritmo de la última hora (reacciona rápido); semanal: media de la ventana, porque
     # extrapolar una hora intensa a varios días daría avisos exagerados
     rate = history.recent_rate(lim["kind"], reset) if total <= 86400 else None
     if rate is None and elapsed > 300:
         rate = pct / elapsed
     if not rate or rate <= 0:
-        return ("Sin consumo en la última hora" if pct else "Aún sin uso en esta ventana"), MUTED, marker
-    unit, factor = ("%/h", 3600) if total <= 86400 else ("%/día", 86400)
-    speed = f"Ritmo ≈ {rate * factor:.1f} {unit}"
+        return tr("pace.idle" if pct else "pace.unused"), MUTED, marker
+    unit, factor = ("%/h", 3600) if total <= 86400 else (tr("pace.day"), 86400)
+    speed = tr("pace.speed", value=f"{rate * factor:.1f}", unit=unit)
     eta = now + (100 - pct) / rate
     if eta < reset:
-        return f"{speed} → límite {fmt_when(eta)}", AMBER, marker
-    return f"{speed} → no llegarás al límite", GREEN, marker
+        return tr("pace.hit", speed=speed, when=fmt_when(eta)), AMBER, marker
+    return tr("pace.ok", speed=speed), GREEN, marker
 
 
 # ───────────────────────── Windows ─────────────────────────
@@ -468,10 +602,10 @@ class LimitRow:
 
     def update(self, lim, history):
         self.value = lim["pct"]
-        self.title.config(text=LABELS.get(lim["kind"], lim["kind"].replace("_", " ").capitalize()))
+        self.title.config(text=label(lim["kind"]))
         self.pct.config(text=f"{self.value:.0f}%", fg=color_for(self.value))
         reset = fmt_reset(lim["reset"])
-        self.sub.config(text=f"Te queda {max(0.0, 100 - self.value):.0f}%" + (f" · {reset}" if reset else ""))
+        self.sub.config(text=tr("row.left", pct=f"{max(0.0, 100 - self.value):.0f}") + (f" · {reset}" if reset else ""))
         text, color, self.marker = pace_info(lim, history)
         self.pace.config(text=text, fg=color)
         self._draw()
@@ -489,15 +623,12 @@ class LimitRow:
             c.create_line(x, 0, x, h, fill=FG, width=2)
 
 
-SHORT = {"session": "Sesión", "weekly_all": "Semana", "weekly_opus": "Opus", "weekly_sonnet": "Sonnet"}
-
-
 def fmt_short(epoch):
     if not epoch:
         return ""
     secs = int(epoch - time.time())
     if secs <= 0:
-        return "ya"
+        return tr("reset.short_done")
     d, rem = divmod(secs, 86400)
     h, rem = divmod(rem, 3600)
     m = rem // 60
@@ -555,7 +686,7 @@ class Widget:
 
         self.table = tk.Frame(self.inner, bg=BG)
         self.table.pack(fill="x", pady=(6 if big else 4, 0))
-        self.placeholder = tk.Label(self.table, text="Consultando…", bg=BG, fg=MUTED, font=(FONT, 10))
+        self.placeholder = tk.Label(self.table, text=tr("loading"), bg=BG, fg=MUTED, font=(FONT, 10))
         self.placeholder.grid(row=0, column=0)
         self.rows = []
         self._drag = None
@@ -657,10 +788,11 @@ class Widget:
     def _update_large(self, row, lim, pace):
         text, color, marker = pace
         p = lim["pct"]
-        row["name"].config(text=SHORT.get(lim["kind"], lim["kind"]).upper())
+        row["name"].config(text=short(lim["kind"]).upper())
         row["pct"].config(text=f"{p:.0f}%", fg=color_for(p))
         when = fmt_short(lim["reset"])
-        row["sub"].config(text=f"Quedan {max(0.0, 100 - p):.0f}%" + (f"  ·  reinicia en {when}" if when else ""))
+        row["sub"].config(text=tr("widget.left", pct=f"{max(0.0, 100 - p):.0f}")
+                          + (f"  ·  {tr('widget.resets', when=when)}" if when else ""))
         row["pace"].config(text=text, fg=color)
         self._bar(row["bar"], self.LARGE_W, self.LARGE_H, p, marker)
 
@@ -697,10 +829,10 @@ class Widget:
             c.create_line(*pts, fill=FG, width=2)
         warn = "⚠" if color in (AMBER, RED) else ""
         c.create_text(s / 2, s / 2 - 8, text=f"{p:.0f}%", fill=color_for(p), font=(FONT_B, 22))
-        c.create_text(s / 2, s / 2 + 18, text=f"{warn} {SHORT.get(lim['kind'], lim['kind'])}".strip(),
+        c.create_text(s / 2, s / 2 + 18, text=f"{warn} {short(lim['kind'])}".strip(),
                       fill=AMBER if warn else FG, font=(FONT_B, 10))
         when = fmt_short(lim["reset"])
-        row["sub"].config(text=f"reinicia en {when}" if when else "")
+        row["sub"].config(text=tr("widget.resets", when=when) if when else "")
 
     # estilo compacto: una línea por límite
     COMPACT_W, COMPACT_H = 110, 7
@@ -719,7 +851,7 @@ class Widget:
         _, color, marker = pace
         p = lim["pct"]
         warn = "⚠ " if color in (AMBER, RED) else ""
-        row["name"].config(text=SHORT.get(lim["kind"], lim["kind"][:7]))
+        row["name"].config(text=short(lim["kind"]))
         row["pct"].config(text=f"{warn}{p:.0f}%", fg=color if warn else color_for(p))
         row["reset"].config(text=fmt_short(lim["reset"]))
         self._bar(row["bar"], self.COMPACT_W, self.COMPACT_H, p, marker)
@@ -841,9 +973,9 @@ class Tray:
 
     def _menu(self):
         u32 = self.u32
-        items = ((self.TOGGLE, "Mostrar / ocultar widget" + ("\tCtrl+Alt+U" if self.hotkey else "")),
-                 (self.FULL, "Ventana completa"), (self.REFRESH, "Actualizar ahora"),
-                 (None, None), (self.QUIT, "Salir"))
+        items = ((self.TOGGLE, tr("tray.toggle") + ("\tCtrl+Alt+U" if self.hotkey else "")),
+                 (self.FULL, tr("tray.full")), (self.REFRESH, tr("tray.refresh")),
+                 (None, None), (self.QUIT, tr("quit")))
         menu = u32.CreatePopupMenu()
         for cid, text in items:
             u32.AppendMenuW(menu, 0x800 if cid is None else 0, cid or 0, text)  # MF_SEPARATOR / MF_STRING
@@ -924,7 +1056,7 @@ class App:
                    font=(FONT, 11), padx=6)
         header = tk.Frame(self.root, bg=BG, padx=12, pady=8)
         header.pack(fill="x")
-        tk.Label(header, text="Uso de Claude", bg=BG, fg=FG, font=(FONT_B, 12)).pack(side="left")
+        tk.Label(header, text=tr("title"), bg=BG, fg=FG, font=(FONT_B, 12)).pack(side="left")
         self.menu_btn = tk.Button(header, text="⚙", command=self._show_menu, **btn)
         self.menu_btn.pack(side="right")
         tk.Button(header, text="⟳", command=self.refresh, **btn).pack(side="right")
@@ -950,7 +1082,7 @@ class App:
         card.pack(fill="x", pady=(0, 8))
         top = tk.Frame(card, bg=CARD)
         top.pack(fill="x")
-        tk.Label(top, text="Historial", bg=CARD, fg=FG, font=(FONT_B, 10)).pack(side="left")
+        tk.Label(top, text=tr("history"), bg=CARD, fg=FG, font=(FONT_B, 10)).pack(side="left")
         self.range_btns = {}
         for hours, label in ((168, "7 d"), (24, "24 h")):
             b = tk.Button(top, text=label, bd=0, padx=6, cursor="hand2", font=(FONT, 8), bg=CARD,
@@ -963,46 +1095,52 @@ class App:
 
         card = tk.Frame(self.details, bg=CARD, padx=10, pady=8)
         card.pack(fill="x", pady=(0, 8))
-        tk.Label(card, text="Tokens en Claude Code (este PC)", bg=CARD, fg=FG, font=(FONT_B, 10),
+        tk.Label(card, text=tr("tokens.title"), bg=CARD, fg=FG, font=(FONT_B, 10),
                  anchor="w").pack(fill="x")
         self.tok_labels = []
         for _ in range(5):
             lbl = tk.Label(card, bg=CARD, fg=MUTED, font=(FONT, 9), anchor="w", justify="left")
             lbl.pack(fill="x")
             self.tok_labels.append(lbl)
-        self.tok_labels[0].config(text="Analizando registros…")
+        self.tok_labels[0].config(text=tr("tokens.scanning"))
 
     def _build_menu(self):
         m = self.menu = tk.Menu(self.root, tearoff=False)
-        m.add_command(label="Ver como widget", command=lambda: self.show_mode("widget"))
-        m.add_command(label="Ver ventana completa", command=lambda: self.show_mode("full"))
-        m.add_command(label="Ocultar en la bandeja   Ctrl+Alt+U", command=self.hide)
+        m.add_command(label=tr("menu.widget"), command=lambda: self.show_mode("widget"))
+        m.add_command(label=tr("menu.full"), command=lambda: self.show_mode("full"))
+        m.add_command(label=tr("menu.hide"), command=self.hide)
         m.add_separator()
-        m.add_checkbutton(label="Siempre encima", variable=self.on_top, command=self._on_top_changed)
-        m.add_checkbutton(label="Iniciar con Windows", variable=self.autostart, command=self._autostart_changed)
-        m.add_checkbutton(label="Notificaciones", variable=self.notify, command=self.save)
+        m.add_checkbutton(label=tr("menu.on_top"), variable=self.on_top, command=self._on_top_changed)
+        m.add_checkbutton(label=tr("menu.autostart"), variable=self.autostart, command=self._autostart_changed)
+        m.add_checkbutton(label=tr("menu.notify"), variable=self.notify, command=self.save)
         sub = tk.Menu(m, tearoff=False)
         for secs, label in ((30, "30 s"), (60, "1 min"), (120, "2 min"), (300, "5 min")):
             sub.add_radiobutton(label=label, value=secs, variable=self.interval, command=self._interval_changed)
-        m.add_cascade(label="Actualizar cada", menu=sub)
+        m.add_cascade(label=tr("menu.interval"), menu=sub)
         self.style = tk.StringVar(value=self.settings["widget_style"])
         sub = tk.Menu(m, tearoff=False)
-        for value, label in (("large", "Grande"), ("rings", "Anillos"), ("compact", "Compacto")):
-            sub.add_radiobutton(label=label, value=value, variable=self.style, command=self._style_changed)
-        m.add_cascade(label="Estilo del widget", menu=sub)
+        for value in ("large", "rings", "compact"):
+            sub.add_radiobutton(label=tr(f"style.{value}"), value=value, variable=self.style,
+                                command=self._style_changed)
+        m.add_cascade(label=tr("menu.style"), menu=sub)
         self.alpha = tk.DoubleVar(value=self.settings["alpha"])
         sub = tk.Menu(m, tearoff=False)
         for alpha in (1.0, 0.95, 0.85, 0.75, 0.6):
             sub.add_radiobutton(label=f"{alpha:.0%}", value=alpha, variable=self.alpha, command=self._alpha_changed)
-        m.add_cascade(label="Opacidad del widget", menu=sub)
+        m.add_cascade(label=tr("menu.alpha"), menu=sub)
+        self.lang = tk.StringVar(value=LANG)
+        sub = tk.Menu(m, tearoff=False)
+        for code, name in LANGUAGES:
+            sub.add_radiobutton(label=name, value=code, variable=self.lang,
+                                command=lambda: self.root.after(50, self._lang_changed))
+        m.add_cascade(label=tr("menu.lang"), menu=sub)
         m.add_separator()
-        m.add_command(label="Abrir uso en claude.ai", command=lambda: webbrowser.open(USAGE_PAGE))
-        m.add_command(label="Exportar historial a CSV", command=self.export_csv)
-        m.add_command(label="Probar notificación",
-                      command=lambda: toast(APP_NAME, "Las notificaciones funcionan correctamente."))
-        m.add_command(label="Abrir carpeta de la app", command=lambda: os.startfile(APP_DIR))
+        m.add_command(label=tr("menu.open_web"), command=lambda: webbrowser.open(USAGE_PAGE))
+        m.add_command(label=tr("menu.export"), command=self.export_csv)
+        m.add_command(label=tr("menu.test"), command=lambda: toast(APP_NAME, tr("test.body")))
+        m.add_command(label=tr("menu.folder"), command=lambda: os.startfile(APP_DIR))
         m.add_separator()
-        m.add_command(label="Salir", command=self.quit)
+        m.add_command(label=tr("quit"), command=self.quit)
 
     # ── acciones ──
     def _show_menu(self):
@@ -1014,17 +1152,35 @@ class App:
         self.widget.win.attributes("-topmost", self.on_top.get())
         self.save()
 
-    def _style_changed(self):
+    def _rebuild_widget(self):
         old = self.widget
         visible = old.win.state() == "normal"
         right = old.win.winfo_x() + old.win.winfo_width()
-        self.settings["widget_style"] = self.style.get()
         old.win.destroy()
         self.widget = Widget(self)
         self.render()
         if visible:
             self.widget.show(anchor_right=right)
+
+    def _style_changed(self):
+        self.settings["widget_style"] = self.style.get()
+        self._rebuild_widget()
         self.save()
+
+    def _lang_changed(self):
+        """Cambia el idioma reconstruyendo la interfaz, sin reiniciar la app."""
+        global LANG
+        LANG = self.settings["lang"] = self.lang.get()
+        self.save()
+        for child in self.root.winfo_children():
+            if child is not self.widget.win:
+                child.destroy()
+        self.rows = []
+        self._build()
+        self._rebuild_widget()
+        if self.tokens:
+            self._render_tokens()
+        self._draw_chart()
 
     def _alpha_changed(self):
         self.settings["alpha"] = self.alpha.get()
@@ -1036,7 +1192,7 @@ class App:
             set_autostart(self.autostart.get())
         except OSError as e:
             self.autostart.set(get_autostart())
-            self.status.config(text=f"No se pudo cambiar el inicio automático: {e}", fg=AMBER)
+            self.status.config(text=tr("err.autostart", e=e), fg=AMBER)
 
     def _interval_changed(self):
         self.save()
@@ -1049,7 +1205,7 @@ class App:
 
     def _apply_details(self):
         shown = self.settings["details"]
-        self.toggle.config(text=("▾ " if shown else "▸ ") + "Historial y tokens")
+        self.toggle.config(text=("▾ " if shown else "▸ ") + tr("details"))
         if shown:
             self.details.pack(fill="x", after=self.toggle)
         else:
@@ -1065,19 +1221,21 @@ class App:
         self.save()
 
     def export_csv(self):
-        path = DATA_DIR / "historial.csv"
+        path = DATA_DIR / tr("csv.file")
+        # Excel en español espera ';' y coma decimal; en inglés, ',' y punto
+        sep, dec = (";", ",") if LANG == "es" else (",", ".")
         try:
             with open(path, "w", newline="", encoding="utf-8-sig") as f:
-                w = csv.writer(f, delimiter=";")
-                w.writerow(["fecha", "limite", "porcentaje", "reinicio"])
+                w = csv.writer(f, delimiter=sep)
+                w.writerow(tr("csv.header"))
                 for p in self.history.points:
                     for kind, (pct, reset) in p["l"].items():
                         w.writerow([datetime.fromtimestamp(p["t"]).strftime("%Y-%m-%d %H:%M:%S"),
-                                    LABELS.get(kind, kind), f"{pct:g}".replace(".", ","),
+                                    label(kind), f"{pct:g}".replace(".", dec),
                                     datetime.fromtimestamp(reset).strftime("%Y-%m-%d %H:%M") if reset else ""])
             os.startfile(path)
         except OSError as e:
-            self.status.config(text=f"No se pudo exportar: {e}", fg=AMBER)
+            self.status.config(text=tr("err.export", e=e), fg=AMBER)
 
     def save(self):
         self.settings.update(on_top=self.on_top.get(), notify=self.notify.get(), interval=self.interval.get())
@@ -1113,8 +1271,7 @@ class App:
         if not self.settings.get("hint_shown"):
             self.settings["hint_shown"] = True
             self.save()
-            toast(APP_NAME, "Sigo en la bandeja del sistema, junto al reloj. Haz clic en el icono"
-                  + (" o pulsa Ctrl+Alt+U" if self.tray.hotkey else "") + " para volver a verme.")
+            toast(APP_NAME, tr("hint", hotkey=tr("hint.hotkey") if self.tray.hotkey else ""))
 
     def toggle_visible(self):
         visible = self.root.state() == "normal" or self.widget.win.state() == "normal"
@@ -1154,11 +1311,11 @@ class App:
         try:
             self.events.put(("usage", fetch_usage()))
         except RateLimited as e:
-            self.events.put(("ratelimit", str(e)))
+            self.events.put(("ratelimit", (e.key, e.kw)))
         except AuthError as e:
-            self.events.put(("error", str(e)))
+            self.events.put(("error", (e.key, e.kw)))
         except Exception as e:  # red caída, respuesta inesperada…
-            self.events.put(("error", f"No se pudo consultar el uso ({e.__class__.__name__})."))
+            self.events.put(("error", ("err.fetch", {"name": e.__class__.__name__})))
 
     def scan_tokens(self):
         threading.Thread(target=lambda: self.events.put(("tokens", scan_tokens())), daemon=True).start()
@@ -1209,11 +1366,11 @@ class App:
         notified = self.settings.setdefault("notified", {})
         for lim in limits:
             kind, pct, reset = lim["kind"], lim["pct"], lim["reset"]
-            label = LABELS.get(kind, kind)
+            name = label(kind)
             prev = self.history.last(kind)
             if prev and prev[0] >= 50 and (pct < prev[0] - 5 or
                                            (reset and prev[1] and reset - prev[1] > 1800)):
-                toast(f"{label}: reiniciado", f"Vuelves a tener disponible el {100 - pct:.0f}%.")
+                toast(tr("alert.reset", label=name), tr("alert.reset_body", pct=f"{100 - pct:.0f}"))
             window = round(reset / 3600) if reset else 0
             last_window, last_level = notified.get(kind, [None, 0])
             if last_window != window:
@@ -1221,11 +1378,11 @@ class App:
             level = max((t for t in THRESHOLDS if pct >= t), default=0)
             if level > last_level:
                 if level >= 100:
-                    toast(f"{label}: límite alcanzado", fmt_reset(reset).capitalize() or "Espera al reinicio.")
+                    toast(tr("alert.limit", label=name), fmt_reset(reset).capitalize() or tr("alert.wait"))
                 else:
                     when = fmt_reset(reset)
-                    toast(f"{label}: {pct:.0f}% usado",
-                          f"Te queda un {100 - pct:.0f}%." + (f" {when.capitalize()}." if when else ""))
+                    toast(tr("alert.used", label=name, pct=f"{pct:.0f}"),
+                          tr("alert.left", pct=f"{100 - pct:.0f}") + (f" {when.capitalize()}." if when else ""))
             notified[kind] = [window, max(level, last_level)]
         self.save()
 
@@ -1243,7 +1400,7 @@ class App:
 
         extra = (self.data or {}).get("extra_usage") or {}
         if extra.get("is_enabled") and extra.get("utilization") is not None:
-            self.extra.config(text=f"Créditos extra: {extra['utilization']:.0f}% del límite mensual")
+            self.extra.config(text=tr("extra", pct=f"{extra['utilization']:.0f}"))
             self.extra.pack(fill="x", after=self.body, pady=(0, 6))
         else:
             self.extra.pack_forget()
@@ -1251,23 +1408,21 @@ class App:
         if limits:
             worst = max(lim["pct"] for lim in limits)
             self.root.title("Claude " + " · ".join(f"{lim['pct']:.0f}%" for lim in limits))
-            note = "Has alcanzado un límite." if worst >= 100 else \
-                f"Margen: {100 - worst:.0f}% hasta el límite más cercano."
+            note = tr("status.limit") if worst >= 100 else tr("status.margin", pct=f"{100 - worst:.0f}")
         elif self.updated_at:
-            note = "La API no devolvió límites para esta cuenta."
+            note = tr("status.no_limits")
         else:
-            note = "Consultando…"
+            note = tr("loading")
 
         self.widget.render(limits, self.history, self.error)
-        tip = " · ".join(f"{SHORT.get(lim['kind'], lim['kind'])} {lim['pct']:.0f}%" for lim in limits)
+        tip = " · ".join(f"{short(lim['kind'])} {lim['pct']:.0f}%" for lim in limits)
         self.tray.set_tip(f"Claude · {tip}" if tip else APP_NAME)
 
         if self.error:
-            stale = f"\nÚltimo dato: {self.updated_at:%H:%M}" if self.updated_at else ""
-            self.status.config(text=self.error + stale, fg=AMBER)
+            stale = "\n" + tr("status.last", time=f"{self.updated_at:%H:%M}") if self.updated_at else ""
+            self.status.config(text=tr(self.error[0], **self.error[1]) + stale, fg=AMBER)
         else:
-            stamp = f"\nActualizado {self.updated_at:%H:%M:%S} · la línea blanca marca el tiempo transcurrido" \
-                if self.updated_at else ""
+            stamp = "\n" + tr("status.updated", time=f"{self.updated_at:%H:%M:%S}") if self.updated_at else ""
             self.status.config(text=note + stamp, fg=MUTED)
 
     def _draw_chart(self):
@@ -1288,8 +1443,8 @@ class App:
             c.create_text(left - 4, y_of(v), text=f"{v}%", anchor="e", fill=MUTED, font=(FONT, 7))
         for frac, anchor in ((0, "sw"), (0.5, "s"), (1, "se")):
             t = datetime.fromtimestamp(start + hours * 3600 * frac)
-            label = f"{t:%H:%M}" if hours <= 24 else f"{DAYS[t.weekday()]} {t:%d}"
-            c.create_text(left + (right - left) * frac, h - 2, text=label, anchor=anchor, fill=MUTED, font=(FONT, 7))
+            text = f"{t:%H:%M}" if hours <= 24 else f"{day(t.weekday())} {t:%d}"
+            c.create_text(left + (right - left) * frac, h - 2, text=text, anchor=anchor, fill=MUTED, font=(FONT, 7))
         gap = max(600, 3 * self.interval.get())
         legend_x = right
         for lim in reversed(self.limits):
@@ -1307,14 +1462,14 @@ class App:
                 c.create_line(*seg, fill=color, width=2)
             elif len(seg) == 2:
                 c.create_oval(seg[0] - 2, seg[1] - 2, seg[0] + 2, seg[1] + 2, fill=color, outline="")
-            name = "Sesión" if kind == "session" else LABELS.get(kind, kind).split("·")[-1].strip().capitalize()
+            name = short(kind) if kind == "session" else label(kind).split("·")[-1].strip().capitalize()
             item = c.create_text(legend_x, 2, text=f"● {name}", anchor="ne", fill=color, font=(FONT, 7))
             legend_x = c.bbox(item)[0] - 8
 
     def _render_tokens(self):
         s = self.tokens
         if not s or not s["week"]:
-            self.tok_labels[0].config(text="Sin actividad de Claude Code en los últimos 7 días.")
+            self.tok_labels[0].config(text=tr("tokens.none"))
             return
         t, wk = s["today"], s["week"]
         top = lambda d: " · ".join(f"{name} {100 * v / sum(d.values()):.0f}%"
@@ -1324,12 +1479,12 @@ class App:
         for m, v in s["models"].items():
             models[pretty_model(m)] += v
         lines = [
-            f"Hoy: {fmt_num(sum(t.values()))}   ·   7 días: {fmt_num(sum(wk.values()))}",
-            f"Hoy → entrada {fmt_num(t['input'])} · salida {fmt_num(t['output'])} · "
-            f"caché {fmt_num(t['cache_write'])} escr. / {fmt_num(t['cache_read'])} lect.",
-            f"Modelos (7 d): {top(models)}",
-            f"Proyectos (7 d): {top(s['projects'])}",
-            "La lectura de caché cuenta mucho menos para el límite que la salida.",
+            tr("tokens.totals", today=fmt_num(sum(t.values())), week=fmt_num(sum(wk.values()))),
+            tr("tokens.split", input=fmt_num(t["input"]), output=fmt_num(t["output"]),
+               write=fmt_num(t["cache_write"]), read=fmt_num(t["cache_read"])),
+            tr("tokens.models", top=top(models)),
+            tr("tokens.projects", top=top(s["projects"])),
+            tr("tokens.note"),
         ]
         for lbl, text in zip(self.tok_labels, lines):
             lbl.config(text=text)
@@ -1356,8 +1511,7 @@ def uninstall(silent):
     if not silent:
         r = tk.Tk()
         r.withdraw()
-        ok = messagebox.askyesno(APP_NAME, "¿Desinstalar Claude Usage?\n\nSe quitarán los accesos directos, "
-                                           "el inicio automático y el historial de uso.", parent=r)
+        ok = messagebox.askyesno(APP_NAME, tr("uninstall.ask"), parent=r)
         r.destroy()
         if not ok:
             return
@@ -1393,11 +1547,13 @@ def uninstall(silent):
     if not silent:
         r = tk.Tk()
         r.withdraw()
-        messagebox.showinfo(APP_NAME, "Claude Usage se ha desinstalado.", parent=r)
+        messagebox.showinfo(APP_NAME, tr("uninstall.done"), parent=r)
         r.destroy()
 
 
 def main():
+    global LANG
+    LANG = load_settings().get("lang") or LANG
     if "--uninstall" in sys.argv:
         uninstall("--silent" in sys.argv)
         return

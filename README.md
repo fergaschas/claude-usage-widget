@@ -4,7 +4,7 @@
 
 A Windows desktop widget that shows **how much of your Claude plan you've used** (the 5-hour session and the weekly limit) and how much you have left, always in view.
 
-> Unofficial project, not affiliated with Anthropic. The app's interface is in Spanish.
+> Unofficial project, not affiliated with Anthropic.
 
 <p>
   <img src="docs/widget-large.png" alt="Large style" height="260">
@@ -21,11 +21,12 @@ A Windows desktop widget that shows **how much of your Claude plan you've used**
 - **Windows notifications** at 75 %, 90 % and 100 %, and when a limit resets.
 - **Full window** (double-click the widget) with a 24-hour or 7-day usage chart and your Claude Code tokens by day, model and project.
 - **CSV export** of the history, start with Windows, and an installer that doesn't need admin rights.
+- **English and Spanish**: follows your Windows language and can be switched at any time from the menu (*Idioma / Language*).
 
 ## Installation
 
 1. Download **`ClaudeUsage-Setup.exe`** from [Releases](../../releases/latest).
-2. Run it and click **Instalar** (Install). If SmartScreen appears, choose *More info → Run anyway*; it shows up because the executable isn't signed.
+2. Run it and click **Install**. If SmartScreen appears, choose *More info → Run anyway*; it shows up because the executable isn't signed.
 3. The app appears in the Start menu as **Claude Usage**.
 
 **Requirement:** [Claude Code](https://claude.com/claude-code) installed and signed in on the PC (run `claude` once).
@@ -57,7 +58,7 @@ powershell -ExecutionPolicy Bypass -File build.ps1
 | File | What it is |
 |---|---|
 | `ClaudeUsage.pyw` | The app (widget, tray, notifications, uninstall via `--uninstall`) |
-| `setup_installer.py` | The installer; supports silent install with `--silent [--dir PATH] [--no-desktop] [--no-autostart] [--no-launch]` |
+| `setup_installer.py` | The installer; supports silent install with `--silent [--dir PATH] [--no-desktop] [--no-autostart] [--no-launch]`, and `--lang es\|en` to force its language |
 | `build.ps1` | Builds both executables |
 | `packaging/` | Version metadata for the `.exe` files |
 

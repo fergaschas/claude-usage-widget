@@ -4,6 +4,7 @@ Se empaqueta con PyInstaller junto a ClaudeUsage.exe (como datos) para obtener u
 ClaudeUsage-Setup.exe. Instala por usuario, sin permisos de administrador.
 
 Uso silencioso: ClaudeUsage-Setup.exe --silent [--dir RUTA] [--no-desktop] [--no-autostart] [--no-launch]
+Idioma: el de Windows; se puede forzar con --lang es|en.
 """
 
 import os
@@ -18,7 +19,7 @@ from pathlib import Path
 from tkinter import filedialog
 
 APP_NAME = "Claude Usage"
-VERSION = "2.2"
+VERSION = "2.3"
 EXE = "ClaudeUsage.exe"
 BUNDLE = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 PAYLOAD, ICON = BUNDLE / EXE, BUNDLE / "icon.png"
@@ -32,6 +33,58 @@ NO_WINDOW = subprocess.CREATE_NO_WINDOW
 BG, CARD, FG, MUTED, BORDER = "#111114", "#202026", "#ffffff", "#c8c8d2", "#4a4a55"
 GREEN, AMBER, ACCENT = "#34d17a", "#ffb224", "#e8825f"
 FONT, FONT_B = "Segoe UI", "Segoe UI Semibold"
+
+STRINGS = {
+    "es": {
+        "title": "Instalar {app}", "tagline": "Widget con el % de uso de tu plan de Claude",
+        "no_session": "⚠  No se ha encontrado una sesión de Claude Code en este PC. La app lee tu uso a través "
+                      "de ella: instala Claude Code y ejecuta «claude» para iniciar sesión. Puedes instalar "
+                      "igualmente y hacerlo después.",
+        "folder": "Carpeta de instalación", "change": "Cambiar…",
+        "opt.desktop": "Crear acceso directo en el escritorio", "opt.autostart": "Iniciar con Windows",
+        "opt.open": "Abrir Claude Usage al terminar",
+        "note": "Se instala solo para tu usuario; no requiere permisos de administrador.",
+        "install": "Instalar", "update": "Actualizar", "cancel": "Cancelar", "close": "Cerrar",
+        "step.stop": "Cerrando Claude Usage si está abierto…", "step.copy": "Copiando archivos…",
+        "step.links": "Creando accesos directos…", "step.register": "Registrando la aplicación…",
+        "failed": "No se pudo completar la instalación: {e}",
+        "done": "✓  Instalado. Búscalo en el menú Inicio como «Claude Usage». Pulsa Ctrl+Alt+U para "
+                "mostrar u ocultar el widget.",
+        "browse": "Elige dónde instalar Claude Usage", "link_desc": "Porcentaje de uso de tu plan de Claude",
+    },
+    "en": {
+        "title": "Install {app}", "tagline": "Widget showing how much of your Claude plan you've used",
+        "no_session": "⚠  No Claude Code session was found on this PC. The app reads your usage through it: "
+                      "install Claude Code and run “claude” to sign in. You can install anyway and do it later.",
+        "folder": "Install folder", "change": "Change…",
+        "opt.desktop": "Create a desktop shortcut", "opt.autostart": "Start with Windows",
+        "opt.open": "Open Claude Usage when done",
+        "note": "Installs for your user only; no admin rights needed.",
+        "install": "Install", "update": "Update", "cancel": "Cancel", "close": "Close",
+        "step.stop": "Closing Claude Usage if it's running…", "step.copy": "Copying files…",
+        "step.links": "Creating shortcuts…", "step.register": "Registering the app…",
+        "failed": "Installation failed: {e}",
+        "done": "✓  Installed. Find it in the Start menu as “Claude Usage”. Press Ctrl+Alt+U to show or "
+                "hide the widget.",
+        "browse": "Choose where to install Claude Usage", "link_desc": "How much of your Claude plan you've used",
+    },
+}
+
+
+def _system_lang():
+    try:
+        import ctypes
+        return "es" if ctypes.windll.kernel32.GetUserDefaultUILanguage() & 0x3FF == 0x0A else "en"
+    except Exception:
+        return "en"
+
+
+LANG = _system_lang()
+
+
+def tr(key, **kw):
+    text = STRINGS[LANG][key]
+    return text.format(**kw) if kw else text
 
 
 def existing_dir():
@@ -60,13 +113,14 @@ $sh = New-Object -ComObject WScript.Shell
 function Link($folder) {
     $s = $sh.CreateShortcut((Join-Path ([Environment]::GetFolderPath($folder)) 'Claude Usage.lnk'))
     $s.TargetPath = $env:CU_EXE; $s.WorkingDirectory = $env:CU_DIR; $s.IconLocation = "$env:CU_EXE,0"
-    $s.Description = 'Porcentaje de uso de tu plan de Claude'; $s.Save()
+    $s.Description = $env:CU_DESC; $s.Save()
 }
 Link 'Programs'
 if ($env:CU_DESK -eq '1') { Link 'Desktop' }
 else { Remove-Item (Join-Path ([Environment]::GetFolderPath('Desktop')) 'Claude Usage.lnk') -ErrorAction SilentlyContinue }
 """
-    env = {**os.environ, "CU_EXE": str(exe), "CU_DIR": str(exe.parent), "CU_DESK": "1" if desktop else "0"}
+    env = {**os.environ, "CU_EXE": str(exe), "CU_DIR": str(exe.parent), "CU_DESK": "1" if desktop else "0",
+           "CU_DESC": tr("link_desc")}
     subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", ps], env=env, check=True,
                    capture_output=True, creationflags=NO_WINDOW)
 
@@ -97,15 +151,15 @@ def launch(exe):
 
 
 def install(target, desktop, autostart, log=print):
-    log("Cerrando Claude Usage si está abierto…")
+    log(tr("step.stop"))
     stop_running()
-    log("Copiando archivos…")
+    log(tr("step.copy"))
     target.mkdir(parents=True, exist_ok=True)
     exe = target / EXE
     shutil.copy2(PAYLOAD, exe)
-    log("Creando accesos directos…")
+    log(tr("step.links"))
     make_shortcuts(exe, desktop)
-    log("Registrando la aplicación…")
+    log(tr("step.register"))
     register(exe, autostart)
     return exe
 
@@ -113,7 +167,7 @@ def install(target, desktop, autostart, log=print):
 class Wizard:
     def __init__(self, root):
         self.root = root
-        root.title(f"Instalar {APP_NAME}")
+        root.title(tr("title", app=APP_NAME))
         root.configure(bg=BG)
         root.resizable(False, False)
         try:
@@ -138,42 +192,39 @@ class Wizard:
         titles = tk.Frame(head, bg=BG)
         titles.pack(side="left", fill="x")
         tk.Label(titles, text=APP_NAME, bg=BG, fg=FG, font=(FONT_B, 18), anchor="w").pack(fill="x")
-        tk.Label(titles, text="Widget con el % de uso de tu plan de Claude", bg=BG, fg=MUTED,
+        tk.Label(titles, text=tr("tagline"), bg=BG, fg=MUTED,
                  font=(FONT, 10), anchor="w").pack(fill="x")
 
         if not CREDENTIALS.exists():
             tk.Label(body, bg=CARD, fg=AMBER, font=(FONT, 9), justify="left", anchor="w", padx=10, pady=8,
                      wraplength=440,
-                     text="⚠  No se ha encontrado una sesión de Claude Code en este PC. La app lee tu uso "
-                          "a través de ella: instala Claude Code y ejecuta «claude» para iniciar sesión. "
-                          "Puedes instalar igualmente y hacerlo después.").pack(fill="x", pady=(16, 0))
+                     text=tr("no_session")).pack(fill="x", pady=(16, 0))
 
-        tk.Label(body, text="Carpeta de instalación", bg=BG, fg=FG, font=(FONT_B, 10),
+        tk.Label(body, text=tr("folder"), bg=BG, fg=FG, font=(FONT_B, 10),
                  anchor="w").pack(fill="x", pady=(18, 4))
         row = tk.Frame(body, bg=BG)
         row.pack(fill="x")
         tk.Entry(row, textvariable=self.target, bg=CARD, fg=FG, insertbackground=FG, relief="flat",
                  font=(FONT, 10), width=44).pack(side="left", fill="x", expand=True, ipady=5)
-        self._button(row, "Cambiar…", self.browse, primary=False).pack(side="left", padx=(8, 0))
+        self._button(row, tr("change"), self.browse, primary=False).pack(side="left", padx=(8, 0))
 
         opts = tk.Frame(body, bg=BG)
         opts.pack(fill="x", pady=(14, 0))
-        for var, text in ((self.desktop, "Crear acceso directo en el escritorio"),
-                          (self.autostart, "Iniciar con Windows"),
-                          (self.open_after, "Abrir Claude Usage al terminar")):
+        for var, text in ((self.desktop, tr("opt.desktop")), (self.autostart, tr("opt.autostart")),
+                          (self.open_after, tr("opt.open"))):
             tk.Checkbutton(opts, text=text, variable=var, bg=BG, fg=FG, selectcolor=CARD, activebackground=BG,
                            activeforeground=FG, font=(FONT, 10), anchor="w", bd=0,
                            highlightthickness=0).pack(fill="x", pady=1)
 
-        self.status = tk.Label(body, text="Se instala solo para tu usuario; no requiere permisos de administrador.",
+        self.status = tk.Label(body, text=tr("note"),
                                bg=BG, fg=MUTED, font=(FONT, 9), anchor="w", justify="left", wraplength=440)
         self.status.pack(fill="x", pady=(16, 0))
 
         buttons = tk.Frame(body, bg=BG)
         buttons.pack(fill="x", pady=(16, 0))
-        self.main_btn = self._button(buttons, "Actualizar" if prev else "Instalar", self.run)
+        self.main_btn = self._button(buttons, tr("update" if prev else "install"), self.run)
         self.main_btn.pack(side="right")
-        self.cancel_btn = self._button(buttons, "Cancelar", root.destroy, primary=False)
+        self.cancel_btn = self._button(buttons, tr("cancel"), root.destroy, primary=False)
         self.cancel_btn.pack(side="right", padx=(0, 8))
 
         root.update_idletasks()
@@ -190,7 +241,7 @@ class Wizard:
 
     def browse(self):
         chosen = filedialog.askdirectory(parent=self.root, initialdir=self.target.get(),
-                                         title="Elige dónde instalar Claude Usage")
+                                         title=tr("browse"))
         if chosen:
             path = Path(chosen)
             self.target.set(str(path if path.name == APP_NAME else path / APP_NAME))
@@ -205,20 +256,22 @@ class Wizard:
         try:
             exe = install(Path(self.target.get()).expanduser(), self.desktop.get(), self.autostart.get(), self.log)
         except Exception as e:
-            self.log(f"No se pudo completar la instalación: {e}", AMBER)
+            self.log(tr("failed", e=e), AMBER)
             self.main_btn.config(state="normal")
             self.cancel_btn.config(state="normal")
             return
         if self.open_after.get():
             launch(exe)
-        self.log("✓  Instalado. Búscalo en el menú Inicio como «Claude Usage». Pulsa Ctrl+Alt+U para "
-                 "mostrar u ocultar el widget.", GREEN)
+        self.log(tr("done"), GREEN)
         self.cancel_btn.pack_forget()
-        self.main_btn.config(text="Cerrar", state="normal", command=self.root.destroy)
+        self.main_btn.config(text=tr("close"), state="normal", command=self.root.destroy)
 
 
 def main():
+    global LANG
     args = sys.argv[1:]
+    if "--lang" in args and args[args.index("--lang") + 1:][:1] in (["es"], ["en"]):
+        LANG = args[args.index("--lang") + 1]
     if "--silent" in args:
         target = Path(args[args.index("--dir") + 1]) if "--dir" in args else (existing_dir() or DEFAULT_DIR)
         try:

@@ -21,6 +21,7 @@ Widget de escritorio para Windows que muestra **cuánto has usado de tu plan de 
 - **Notificaciones de Windows** al llegar al 75 %, al 90 % y al 100 %, y cuando un límite se reinicia.
 - **Ventana completa** (doble clic en el widget) con un gráfico del historial de 24 h o 7 días y los tokens de Claude Code por día, modelo y proyecto.
 - **Exportación del historial a CSV**, arranque con Windows y un instalador que no necesita permisos de administrador.
+- **Español e inglés**: usa el idioma de Windows y se puede cambiar en cualquier momento desde el menú (*Idioma / Language*).
 
 ## Instalación
 
@@ -57,7 +58,7 @@ powershell -ExecutionPolicy Bypass -File build.ps1
 | Archivo | Qué es |
 |---|---|
 | `ClaudeUsage.pyw` | La aplicación (widget, bandeja, notificaciones, desinstalación con `--uninstall`) |
-| `setup_installer.py` | El instalador; admite instalación silenciosa con `--silent [--dir RUTA] [--no-desktop] [--no-autostart] [--no-launch]` |
+| `setup_installer.py` | El instalador; admite instalación silenciosa con `--silent [--dir RUTA] [--no-desktop] [--no-autostart] [--no-launch]`, y `--lang es\|en` para forzar su idioma |
 | `build.ps1` | Compila ambos ejecutables |
 | `packaging/` | Metadatos de versión de los `.exe` |
 
