@@ -2,6 +2,12 @@
 
 [English](README.md) · **Español**
 
+[![Última versión](https://img.shields.io/github/v/release/fergaschas/claude-usage-widget?label=release)](https://github.com/fergaschas/claude-usage-widget/releases/latest)
+[![Descargas](https://img.shields.io/github/downloads/fergaschas/claude-usage-widget/total)](https://github.com/fergaschas/claude-usage-widget/releases)
+[![Licencia: MIT](https://img.shields.io/github/license/fergaschas/claude-usage-widget)](LICENSE)
+![Plataforma: Windows](https://img.shields.io/badge/platform-Windows-0078D6)
+![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776AB)
+
 Widget de escritorio para Windows que muestra **cuánto has usado de tu plan de Claude** (sesión de 5 h y límite semanal) y cuánto te queda, siempre a la vista.
 
 > Proyecto no oficial, sin relación con Anthropic.
@@ -85,6 +91,11 @@ El actualizador de la app lee la última Release de GitHub, así que cada versi�
 | **2.4** | **Asistente de conexión** en el primer uso: instala Claude Code si hace falta, inicia sesión en Claude y comprueba el uso. Aviso *Sin conexión con Claude · Conectar* en el widget. |
 | **2.3** | Interfaz en **español e inglés**, seleccionable desde el menú. |
 | **2.2** | Primera versión pública. |
+
+## Enlaces
+
+- **Web:** [última versión](https://github.com/fergaschas/claude-usage-widget/releases/latest), con el instalador y las novedades.
+- **Temas:** [claude](https://github.com/topics/claude) · [claude-code](https://github.com/topics/claude-code) · [anthropic](https://github.com/topics/anthropic) · [windows](https://github.com/topics/windows) · [widget](https://github.com/topics/widget) · [desktop-widget](https://github.com/topics/desktop-widget) · [usage-tracker](https://github.com/topics/usage-tracker) · [rate-limits](https://github.com/topics/rate-limits) · [system-tray](https://github.com/topics/system-tray) · [python](https://github.com/topics/python) · [tkinter](https://github.com/topics/tkinter)
 
 ## Licencia
 
