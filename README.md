@@ -1,66 +1,66 @@
 # Claude Usage
 
-[English](README.en.md) · **Español**
+**English** · [Español](README.es.md)
 
-Widget de escritorio para Windows que muestra **cuánto has usado de tu plan de Claude** (sesión de 5 h y límite semanal) y cuánto te queda, siempre a la vista.
+A Windows desktop widget that shows **how much of your Claude plan you've used** (the 5-hour session and the weekly limit) and how much you have left, always in view.
 
-> Proyecto no oficial, sin relación con Anthropic.
+> Unofficial project, not affiliated with Anthropic. The app's interface is in Spanish.
 
 <p>
-  <img src="docs/widget-large.png" alt="Estilo Grande" height="260">
-  <img src="docs/widget-rings.png" alt="Estilo Anillos" height="190">
+  <img src="docs/widget-large.png" alt="Large style" height="260">
+  <img src="docs/widget-rings.png" alt="Rings style" height="190">
 </p>
-<img src="docs/widget-compact.png" alt="Estilo Compacto" height="80">
+<img src="docs/widget-compact.png" alt="Compact style" height="80">
 
-## Funciones
+## Features
 
-- **Porcentaje de uso real** de cada límite de tu plan (sesión de 5 h, semanal y, si aplica, Opus/Sonnet), con cuenta atrás hasta el reinicio.
-- **Previsión de ritmo**: calcula a qué velocidad consumes y avisa si vas a llegar al límite antes del reinicio. Una línea blanca en cada barra marca el tiempo transcurrido de la ventana.
-- **Widget flotante** sin bordes y siempre encima, en tres estilos (Grande, Anillos, Compacto) y con opacidad ajustable. Se arrastra a cualquier sitio y recuerda su posición.
-- **Bandeja del sistema** con los porcentajes en el tooltip, y atajo global **Ctrl+Alt+U** para mostrar u ocultar el widget.
-- **Notificaciones de Windows** al llegar al 75 %, al 90 % y al 100 %, y cuando un límite se reinicia.
-- **Ventana completa** (doble clic en el widget) con un gráfico del historial de 24 h o 7 días y los tokens de Claude Code por día, modelo y proyecto.
-- **Exportación del historial a CSV**, arranque con Windows y un instalador que no necesita permisos de administrador.
+- **Real usage percentage** for each limit on your plan (5-hour session, weekly and, where applicable, Opus/Sonnet), with a countdown to the next reset.
+- **Pace forecast**: estimates how fast you're using your allowance and warns you if you'll hit the limit before it resets. A white line on each bar marks how much of the window has elapsed.
+- **Floating widget**: borderless and always on top, in three styles (Large, Rings, Compact) with adjustable opacity. Drag it anywhere and it remembers where you left it.
+- **System tray icon** that shows the percentages in its tooltip, plus a global **Ctrl+Alt+U** shortcut to show or hide the widget.
+- **Windows notifications** at 75 %, 90 % and 100 %, and when a limit resets.
+- **Full window** (double-click the widget) with a 24-hour or 7-day usage chart and your Claude Code tokens by day, model and project.
+- **CSV export** of the history, start with Windows, and an installer that doesn't need admin rights.
 
-## Instalación
+## Installation
 
-1. Descarga **`ClaudeUsage-Setup.exe`** desde [Releases](../../releases/latest).
-2. Ejecútalo y pulsa **Instalar**. Si aparece SmartScreen, elige *Más información → Ejecutar de todas formas*; sale porque el ejecutable no está firmado.
-3. La app aparece en el menú Inicio como **Claude Usage**.
+1. Download **`ClaudeUsage-Setup.exe`** from [Releases](../../releases/latest).
+2. Run it and click **Instalar** (Install). If SmartScreen appears, choose *More info → Run anyway*; it shows up because the executable isn't signed.
+3. The app appears in the Start menu as **Claude Usage**.
 
-**Requisito:** [Claude Code](https://claude.com/claude-code) instalado y con sesión iniciada en el PC (ejecuta `claude` una vez).
+**Requirement:** [Claude Code](https://claude.com/claude-code) installed and signed in on the PC (run `claude` once).
 
-Para desinstalarla: *Configuración → Aplicaciones → Aplicaciones instaladas → Claude Usage*.
+To uninstall: *Settings → Apps → Installed apps → Claude Usage*.
 
-## Cómo funciona
+## How it works
 
-- **Límites del plan:** la app lee el token OAuth que Claude Code guarda en `%USERPROFILE%\.claude\.credentials.json` y consulta el mismo endpoint que usa el comando `/usage` (`api.anthropic.com/api/oauth/usage`). El token solo se envía a Anthropic. El endpoint no está documentado y podría cambiar.
-- **Tokens:** se calculan leyendo los registros locales de Claude Code (`%USERPROFILE%\.claude\projects\**\*.jsonl`). Solo cuentan el uso de Claude Code en ese PC, no el chat de claude.ai.
-- **Datos locales:** el historial y los ajustes se guardan en la carpeta `data\`, junto al ejecutable.
+- **Plan limits:** the app reads the OAuth token that Claude Code stores in `%USERPROFILE%\.claude\.credentials.json` and calls the same endpoint used by the `/usage` command (`api.anthropic.com/api/oauth/usage`). The token is only ever sent to Anthropic. The endpoint is undocumented and could change.
+- **Tokens:** counted from Claude Code's local logs (`%USERPROFILE%\.claude\projects\**\*.jsonl`). They only cover Claude Code usage on that PC, not the claude.ai chat.
+- **Local data:** history and settings are stored in the `data\` folder next to the executable.
 
-No usa dependencias externas: solo la librería estándar de Python (tkinter, ctypes y winreg).
+No external dependencies: only the Python standard library (tkinter, ctypes and winreg).
 
-## Ejecutar desde el código
+## Run from source
 
 ```bash
 pythonw ClaudeUsage.pyw
 ```
 
-## Compilar los ejecutables
+## Build the executables
 
-Necesitas Python 3.10 o superior. El script crea un entorno temporal con PyInstaller y deja `ClaudeUsage.exe` y `ClaudeUsage-Setup.exe` en `dist\`:
+Requires Python 3.10 or later. The script creates a temporary environment with PyInstaller and puts `ClaudeUsage.exe` and `ClaudeUsage-Setup.exe` in `dist\`:
 
 ```bash
 powershell -ExecutionPolicy Bypass -File build.ps1
 ```
 
-| Archivo | Qué es |
+| File | What it is |
 |---|---|
-| `ClaudeUsage.pyw` | La aplicación (widget, bandeja, notificaciones, desinstalación con `--uninstall`) |
-| `setup_installer.py` | El instalador; admite instalación silenciosa con `--silent [--dir RUTA] [--no-desktop] [--no-autostart] [--no-launch]` |
-| `build.ps1` | Compila ambos ejecutables |
-| `packaging/` | Metadatos de versión de los `.exe` |
+| `ClaudeUsage.pyw` | The app (widget, tray, notifications, uninstall via `--uninstall`) |
+| `setup_installer.py` | The installer; supports silent install with `--silent [--dir PATH] [--no-desktop] [--no-autostart] [--no-launch]` |
+| `build.ps1` | Builds both executables |
+| `packaging/` | Version metadata for the `.exe` files |
 
-## Licencia
+## License
 
 [MIT](LICENSE)
