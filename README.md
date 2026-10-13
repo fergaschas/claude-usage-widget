@@ -58,3 +58,7 @@ powershell -ExecutionPolicy Bypass -File build.ps1
 | `setup_installer.py` | El instalador; admite instalación silenciosa con `--silent [--dir RUTA] [--no-desktop] [--no-autostart] [--no-launch]` |
 | `build.ps1` | Compila ambos ejecutables |
 | `packaging/` | Metadatos de versión de los `.exe` |
+
+## Licencia
+
+[MIT](LICENSE)
