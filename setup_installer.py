@@ -19,7 +19,7 @@ from pathlib import Path
 from tkinter import filedialog
 
 APP_NAME = "Claude Usage"
-VERSION = "2.3"
+VERSION = "2.4"
 EXE = "ClaudeUsage.exe"
 BUNDLE = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 PAYLOAD, ICON = BUNDLE / EXE, BUNDLE / "icon.png"
@@ -37,9 +37,8 @@ FONT, FONT_B = "Segoe UI", "Segoe UI Semibold"
 STRINGS = {
     "es": {
         "title": "Instalar {app}", "tagline": "Widget con el % de uso de tu plan de Claude",
-        "no_session": "⚠  No se ha encontrado una sesión de Claude Code en este PC. La app lee tu uso a través "
-                      "de ella: instala Claude Code y ejecuta «claude» para iniciar sesión. Puedes instalar "
-                      "igualmente y hacerlo después.",
+        "no_session": "ℹ  Aún no has conectado Claude en este PC. No pasa nada: al abrir Claude Usage, un "
+                      "asistente te guiará para conectar tu cuenta de Claude en un par de clics.",
         "folder": "Carpeta de instalación", "change": "Cambiar…",
         "opt.desktop": "Crear acceso directo en el escritorio", "opt.autostart": "Iniciar con Windows",
         "opt.open": "Abrir Claude Usage al terminar",
@@ -54,8 +53,8 @@ STRINGS = {
     },
     "en": {
         "title": "Install {app}", "tagline": "Widget showing how much of your Claude plan you've used",
-        "no_session": "⚠  No Claude Code session was found on this PC. The app reads your usage through it: "
-                      "install Claude Code and run “claude” to sign in. You can install anyway and do it later.",
+        "no_session": "ℹ  Claude isn't connected on this PC yet. No problem: when you open Claude Usage, a "
+                      "short wizard will help you connect your Claude account in a couple of clicks.",
         "folder": "Install folder", "change": "Change…",
         "opt.desktop": "Create a desktop shortcut", "opt.autostart": "Start with Windows",
         "opt.open": "Open Claude Usage when done",
@@ -196,7 +195,7 @@ class Wizard:
                  font=(FONT, 10), anchor="w").pack(fill="x")
 
         if not CREDENTIALS.exists():
-            tk.Label(body, bg=CARD, fg=AMBER, font=(FONT, 9), justify="left", anchor="w", padx=10, pady=8,
+            tk.Label(body, bg=CARD, fg=FG, font=(FONT, 9), justify="left", anchor="w", padx=10, pady=8,
                      wraplength=440,
                      text=tr("no_session")).pack(fill="x", pady=(16, 0))
 

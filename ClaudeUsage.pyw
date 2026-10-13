@@ -43,6 +43,7 @@ CREDENTIALS = Path.home() / ".claude" / ".credentials.json"
 PROJECTS_DIR = Path.home() / ".claude" / "projects"
 USAGE_URL = "https://api.anthropic.com/api/oauth/usage"
 USAGE_PAGE = "https://claude.ai/settings/usage"
+CLAUDE_CODE_PAGE = "https://claude.com/claude-code"
 RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 UNINSTALL_KEY = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\ClaudeUsage"
 AUMID_KEY = rf"Software\Classes\AppUserModelId\{APP_ID}"
@@ -71,8 +72,8 @@ STRINGS = {
         "label.weekly_opus": "Semanal · Opus", "label.weekly_sonnet": "Semanal · Sonnet",
         "short.session": "Sesión", "short.weekly_all": "Semana",
         "short.weekly_opus": "Opus", "short.weekly_sonnet": "Sonnet",
-        "err.no_session": "No se encontró la sesión de Claude Code. Inicia sesión con `claude`.",
-        "err.token": "Token caducado: abre Claude Code un momento para renovarlo.",
+        "err.no_session": "No estás conectado a Claude. Abre «Cuenta de Claude…» para conectarte.",
+        "err.token": "La sesión de Claude ha caducado. Abre «Cuenta de Claude…» para reconectar.",
         "err.ratelimit": "Anthropic limita las consultas por ahora; reintento en {min} min.",
         "err.fetch": "No se pudo consultar el uso ({name}).",
         "when.today": "a las {time}", "when.other": "el {day} a las {time}",
@@ -116,6 +117,30 @@ STRINGS = {
         "uninstall.ask": "¿Desinstalar Claude Usage?\n\nSe quitarán los accesos directos, el inicio automático "
                          "y el historial de uso.",
         "uninstall.done": "Claude Usage se ha desinstalado.",
+        "menu.account": "Cuenta de Claude…", "status.account": "Cuenta: {account}",
+        "cta.connect": "⚠  Sin conexión con Claude · Conectar →",
+        "connect.title": "Conectar con Claude", "connect.heading": "Conecta tu cuenta de Claude",
+        "connect.intro": "Claude Usage lee tu uso a través de Claude Code, la herramienta oficial de Anthropic. "
+                         "Solo tienes que conectarlo una vez.",
+        "connect.checking": "Comprobando…",
+        "step.install": "Instalar Claude Code", "step.install.ok": "Claude Code instalado",
+        "step.install.version": "Versión {version}",
+        "step.install.detail": "Es gratuito y se instala en un minuto.",
+        "step.install.wait": "Sigue los pasos de la ventana de instalación. Esto se actualizará solo.",
+        "btn.install": "Instalar",
+        "step.login": "Iniciar sesión en Claude", "step.login.ok": "Sesión iniciada",
+        "step.login.detail": "Se abrirá el navegador para que autorices el acceso con tu cuenta de Claude "
+                             "(Pro, Max, Team…).",
+        "step.login.wait": "Completa el inicio de sesión en el navegador. Esto se actualizará solo.",
+        "step.login.need_install": "Primero instala Claude Code.",
+        "step.login.api": "Claude Code usa una clave de API",
+        "step.login.api_detail": "Los límites de uso solo existen con una suscripción de Claude. "
+                                 "Inicia sesión con tu cuenta de Claude.",
+        "btn.login": "Conectar", "btn.switch": "Cambiar de cuenta",
+        "step.usage": "Leer tu uso", "step.usage.ok": "Uso conectado",
+        "connect.tips": "Todo listo. Arrastra el widget a donde quieras · doble clic: ventana completa · "
+                        "clic derecho: ajustes e idioma · Ctrl+Alt+U: mostrar u ocultar.",
+        "btn.start": "Empezar", "btn.close": "Cerrar",
     },
     "en": {
         "days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
@@ -123,8 +148,8 @@ STRINGS = {
         "label.weekly_opus": "Weekly · Opus", "label.weekly_sonnet": "Weekly · Sonnet",
         "short.session": "Session", "short.weekly_all": "Week",
         "short.weekly_opus": "Opus", "short.weekly_sonnet": "Sonnet",
-        "err.no_session": "Claude Code session not found. Sign in with `claude`.",
-        "err.token": "Token expired: open Claude Code briefly to renew it.",
+        "err.no_session": "Not connected to Claude. Open “Claude account…” to connect.",
+        "err.token": "Your Claude session expired. Open “Claude account…” to reconnect.",
         "err.ratelimit": "Anthropic is rate-limiting requests; retrying in {min} min.",
         "err.fetch": "Couldn't fetch usage ({name}).",
         "when.today": "at {time}", "when.other": "on {day} at {time}",
@@ -168,6 +193,29 @@ STRINGS = {
         "uninstall.ask": "Uninstall Claude Usage?\n\nThe shortcuts, start with Windows and usage history "
                          "will be removed.",
         "uninstall.done": "Claude Usage has been uninstalled.",
+        "menu.account": "Claude account…", "status.account": "Account: {account}",
+        "cta.connect": "⚠  Not connected to Claude · Connect →",
+        "connect.title": "Connect to Claude", "connect.heading": "Connect your Claude account",
+        "connect.intro": "Claude Usage reads your usage through Claude Code, Anthropic's official tool. "
+                         "You only need to connect once.",
+        "connect.checking": "Checking…",
+        "step.install": "Install Claude Code", "step.install.ok": "Claude Code installed",
+        "step.install.version": "Version {version}",
+        "step.install.detail": "It's free and installs in a minute.",
+        "step.install.wait": "Follow the steps in the installer window. This will update by itself.",
+        "btn.install": "Install",
+        "step.login": "Sign in to Claude", "step.login.ok": "Signed in",
+        "step.login.detail": "Your browser will open so you can authorize access with your Claude account "
+                             "(Pro, Max, Team…).",
+        "step.login.wait": "Finish signing in in your browser. This will update by itself.",
+        "step.login.need_install": "Install Claude Code first.",
+        "step.login.api": "Claude Code is using an API key",
+        "step.login.api_detail": "Usage limits only apply to Claude subscriptions. Sign in with your Claude account.",
+        "btn.login": "Connect", "btn.switch": "Switch account",
+        "step.usage": "Read your usage", "step.usage.ok": "Usage connected",
+        "connect.tips": "All set. Drag the widget anywhere · double-click: full window · "
+                        "right-click: settings and language · Ctrl+Alt+U: show or hide.",
+        "btn.start": "Get started", "btn.close": "Close",
     },
 }
 LANGUAGES = (("es", "Español"), ("en", "English"))
@@ -673,7 +721,7 @@ class Widget:
         self.inner = tk.Frame(w, bg=BG, padx=pad[0], pady=pad[1])
         self.inner.pack(padx=1, pady=1)
 
-        head = tk.Frame(self.inner, bg=BG)
+        head = self.head = tk.Frame(self.inner, bg=BG)
         head.pack(fill="x")
         big = self.style != "compact"
         self.dot = tk.Label(head, text="●", bg=BG, fg=ACCENT, font=(FONT, 9 if big else 8))
@@ -684,6 +732,10 @@ class Widget:
         tk.Button(head, text="—", command=app.hide, **btn).pack(side="right")
         tk.Button(head, text="⤢", command=lambda: app.show_mode("full"), **btn).pack(side="right")
 
+        # botón con aspecto de enlace (los botones no inician el arrastre)
+        self.cta = tk.Button(self.inner, text=tr("cta.connect"), command=app.open_connect, bd=0, cursor="hand2",
+                             bg=BG, fg=AMBER, activebackground=CARD, activeforeground=AMBER, anchor="w",
+                             font=(FONT_B, 10 if big else 9), padx=0)
         self.table = tk.Frame(self.inner, bg=BG)
         self.table.pack(fill="x", pady=(6 if big else 4, 0))
         self.placeholder = tk.Label(self.table, text=tr("loading"), bg=BG, fg=MUTED, font=(FONT, 10))
@@ -742,6 +794,12 @@ class Widget:
     # ── dibujo ──
     def render(self, limits, history, error):
         self.dot.config(fg=AMBER if error else ACCENT)
+        disconnected = bool(error and error[0] in AUTH_ERRORS)
+        if disconnected:
+            self.cta.pack(fill="x", after=self.head, pady=(6, 0))
+        else:
+            self.cta.pack_forget()
+        self.placeholder.config(text="" if disconnected else tr("loading"))
         self.placeholder.grid() if not limits else self.placeholder.grid_remove()
         if len(self.rows) != len(limits):
             for row in self.rows:
@@ -999,6 +1057,247 @@ class Tray:
             self.u32.PostMessageW(self.hwnd, 0x0010, 0, 0)  # WM_CLOSE
 
 
+# ───────────────────────── conexión con Claude ─────────────────────────
+
+AUTH_ERRORS = ("err.no_session", "err.token")
+
+
+def find_claude():
+    """Ruta de la CLI de Claude Code, o None. Relee el PATH del registro por si se acaba de instalar."""
+    import shutil
+    paths = [os.environ.get("PATH", "")]
+    for hive, key in ((winreg.HKEY_CURRENT_USER, "Environment"),
+                      (winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment")):
+        try:
+            with winreg.OpenKey(hive, key) as k:
+                paths.append(os.path.expandvars(winreg.QueryValueEx(k, "Path")[0]))
+        except OSError:
+            pass
+    found = shutil.which("claude", path=os.pathsep.join(paths))
+    if found:
+        return found
+    local, roaming = Path(os.environ.get("LOCALAPPDATA", "")), Path(os.environ.get("APPDATA", ""))
+    for candidate in (local / "Microsoft" / "WinGet" / "Links" / "claude.exe",
+                      Path.home() / ".local" / "bin" / "claude.exe", roaming / "npm" / "claude.cmd"):
+        if candidate.exists():
+            return str(candidate)
+    return None
+
+
+def auth_status(claude):
+    """`claude auth status --json`: {loggedIn, authMethod, email, orgName, subscriptionType, ...} o None."""
+    try:
+        out = subprocess.run([claude, "auth", "status", "--json"], capture_output=True, timeout=30,
+                             creationflags=subprocess.CREATE_NO_WINDOW)
+        return json.loads(out.stdout.decode("utf-8", "replace"))
+    except (OSError, ValueError, subprocess.TimeoutExpired):
+        return None
+
+
+def claude_version(claude):
+    try:
+        out = subprocess.run([claude, "--version"], capture_output=True, timeout=30,
+                             creationflags=subprocess.CREATE_NO_WINDOW)
+        return out.stdout.decode("utf-8", "replace").split()[0]  # "2.1.280 (Claude Code)"
+    except (OSError, IndexError, subprocess.TimeoutExpired):
+        return ""
+
+
+def check_connection():
+    claude = find_claude()
+    status = auth_status(claude) if claude else None
+    return {"claude": claude, "status": status, "version": claude_version(claude) if claude else ""}
+
+
+def account_text(status):
+    plan = (status.get("subscriptionType") or "").capitalize()
+    return " · ".join(x for x in (status.get("email"), status.get("orgName"), plan) if x)
+
+
+def run_in_console(command):
+    """Abre una consola visible; solo se queda abierta si el comando falla, para poder leer el error."""
+    subprocess.Popen(f'cmd /c "{command} || pause"', creationflags=subprocess.CREATE_NEW_CONSOLE)
+
+
+class StepRow:
+    ICONS = {"ok": ("✓", GREEN), "todo": (None, MUTED), "wait": ("…", ACCENT), "error": ("!", AMBER)}
+
+    def __init__(self, parent, number):
+        self.number = str(number)  # pasos pendientes: se muestra su número
+        self.frame = tk.Frame(parent, bg=CARD, padx=12, pady=10)
+        self.frame.pack(fill="x", pady=(0, 8))
+        self.icon = tk.Label(self.frame, text=str(number), bg=CARD, fg=MUTED, font=(FONT_B, 14), width=2)
+        self.icon.pack(side="left", anchor="n")
+        text = tk.Frame(self.frame, bg=CARD)
+        text.pack(side="left", fill="x", expand=True, padx=(8, 8))
+        self.title = tk.Label(text, bg=CARD, fg=FG, font=(FONT_B, 10), anchor="w")
+        self.title.pack(fill="x")
+        self.detail = tk.Label(text, bg=CARD, fg=MUTED, font=(FONT, 9), anchor="w", justify="left", wraplength=300)
+        self.detail.pack(fill="x")
+        self.button = tk.Button(self.frame, bd=0, cursor="hand2", padx=12, pady=4, font=(FONT_B, 9),
+                                bg=ACCENT, fg=BG, activebackground="#f09a7a", activeforeground=BG)
+
+    def set(self, state, title, detail="", action=None, command=None):
+        icon, color = self.ICONS[state]
+        self.icon.config(text=icon or self.number, fg=color)
+        self.title.config(text=title, fg=FG if state != "todo" else MUTED)
+        self.detail.config(text=detail)
+        if action:
+            # acción principal en naranja; en pasos ya completados (p. ej. cambiar de cuenta), discreta
+            primary = state != "ok"
+            self.button.config(text=action, command=command, bg=ACCENT if primary else BORDER,
+                               fg=BG if primary else FG, activebackground="#f09a7a" if primary else TRACK,
+                               activeforeground=BG if primary else FG)
+            self.button.pack(side="right", anchor="center")
+        else:
+            self.button.pack_forget()
+
+
+class ConnectWindow:
+    """Asistente de conexión: comprueba Claude Code, la sesión de Claude y el acceso al uso,
+    y se actualiza solo mientras el usuario instala o inicia sesión."""
+
+    POLL_MS = 3000
+
+    def __init__(self, app):
+        self.app = app
+        self.info = None
+        self.checking = self.install_started = self.login_started = False
+        self.last_refresh = 0
+        self._job = None
+        w = self.win = tk.Toplevel(app.root)
+        w.title(tr("connect.title"))
+        w.configure(bg=BG)
+        w.resizable(False, False)
+        w.attributes("-topmost", True)
+        w.protocol("WM_DELETE_WINDOW", self.close)
+
+        body = tk.Frame(w, bg=BG, padx=24, pady=20)
+        body.pack(fill="both")
+        head = tk.Frame(body, bg=BG)
+        head.pack(fill="x", pady=(0, 14))
+        if getattr(app, "_icon", None):
+            self._small = app._icon.subsample(max(1, app._icon.width() // 48))
+            tk.Label(head, image=self._small, bg=BG).pack(side="left", padx=(0, 12), anchor="n")
+        titles = tk.Frame(head, bg=BG)
+        titles.pack(side="left", fill="x")
+        tk.Label(titles, text=tr("connect.heading"), bg=BG, fg=FG, font=(FONT_B, 15), anchor="w").pack(fill="x")
+        tk.Label(titles, text=tr("connect.intro"), bg=BG, fg=MUTED, font=(FONT, 9), anchor="w", justify="left",
+                 wraplength=360).pack(fill="x")
+
+        self.steps = [StepRow(body, i) for i in (1, 2, 3)]
+        self.tips = tk.Label(body, text=tr("connect.tips"), bg=BG, fg=GREEN, font=(FONT, 9), anchor="w",
+                             justify="left", wraplength=420)
+        footer = tk.Frame(body, bg=BG)
+        footer.pack(fill="x", side="bottom", pady=(8, 0))
+        self.main_btn = tk.Button(footer, bd=0, cursor="hand2", padx=16, pady=6, command=self.finish)
+        self.main_btn.pack(side="right")
+        self._set_done(False)
+        for row in self.steps:
+            row.set("wait", tr("connect.checking"))
+
+        w.update_idletasks()
+        x = (w.winfo_screenwidth() - w.winfo_reqwidth()) // 2
+        y = (w.winfo_screenheight() - w.winfo_reqheight()) // 3
+        w.geometry(f"+{x}+{y}")
+        self._poll()
+
+    # ── ciclo de comprobación ──
+    def _poll(self):
+        if not self.checking:
+            self.checking = True
+            threading.Thread(target=lambda: self.app.events.put(("connect", check_connection())),
+                             daemon=True).start()
+        self._job = self.win.after(self.POLL_MS, self._poll)
+
+    def update(self, info):
+        """Recibe el resultado de check_connection() y redibuja los pasos."""
+        self.checking = False
+        self.info = info
+        claude, status = info["claude"], info["status"] or {}
+        install, login, usage = self.steps
+
+        if claude:
+            version = info.get("version")
+            install.set("ok", tr("step.install.ok"), tr("step.install.version", version=version) if version else "")
+        elif self.install_started:
+            install.set("wait", tr("step.install"), tr("step.install.wait"), tr("btn.install"), self.install)
+        else:
+            install.set("todo", tr("step.install"), tr("step.install.detail"), tr("btn.install"), self.install)
+
+        logged = bool(claude and status.get("loggedIn") and status.get("authMethod") == "claude.ai")
+        if not claude:
+            login.set("todo", tr("step.login"), tr("step.login.need_install"))
+        elif logged:
+            login.set("ok", tr("step.login.ok"), account_text(status), tr("btn.switch"), self.login)
+        elif status.get("loggedIn"):
+            login.set("error", tr("step.login.api"), tr("step.login.api_detail"), tr("btn.login"), self.login)
+        elif self.login_started:
+            login.set("wait", tr("step.login"), tr("step.login.wait"), tr("btn.login"), self.login)
+        else:
+            login.set("todo", tr("step.login"), tr("step.login.detail"), tr("btn.login"), self.login)
+
+        app = self.app
+        done = False
+        if not logged:
+            usage.set("todo", tr("step.usage"))
+        elif app.limits and (not app.error or app.error[0] == "err.ratelimit"):
+            # con límite de consultas la conexión es correcta: se muestra el último dato
+            summary = " · ".join(f"{short(lim['kind'])} {lim['pct']:.0f}%" for lim in app.limits)
+            usage.set("ok", tr("step.usage.ok"),
+                      summary + (f"\n{tr(app.error[0], **app.error[1])}" if app.error else ""))
+            done = True
+        else:
+            if app.error:
+                usage.set("error", tr("step.usage"), tr(app.error[0], **app.error[1]))
+            else:
+                usage.set("wait", tr("step.usage"), tr("loading"))
+            if time.time() - self.last_refresh > 10:  # recién conectado: pedir el uso ya
+                self.last_refresh = time.time()
+                app.refresh()
+        self._set_done(done)
+
+    def _set_done(self, done):
+        if done:
+            self.tips.pack(fill="x", pady=(4, 0))
+            self.main_btn.config(text=tr("btn.start"), font=(FONT_B, 10), bg=ACCENT, fg=BG,
+                                 activebackground="#f09a7a", activeforeground=BG)
+        else:
+            self.tips.pack_forget()
+            self.main_btn.config(text=tr("btn.close"), font=(FONT, 10), bg=CARD, fg=FG,
+                                 activebackground=BORDER, activeforeground=FG)
+
+    # ── acciones ──
+    def install(self):
+        import shutil
+        self.install_started = True
+        if shutil.which("winget"):
+            run_in_console("winget install --id Anthropic.ClaudeCode -e")
+        else:
+            webbrowser.open(CLAUDE_CODE_PAGE)
+        self.steps[0].set("wait", tr("step.install"), tr("step.install.wait"), tr("btn.install"), self.install)
+
+    def login(self):
+        claude = (self.info or {}).get("claude") or find_claude()
+        if not claude:
+            return
+        self.login_started = True
+        run_in_console(f'"{claude}" auth login --claudeai')
+        self.steps[1].set("wait", tr("step.login"), tr("step.login.wait"), tr("btn.login"), self.login)
+
+    def finish(self):
+        self.app.settings["onboarded"] = True
+        self.app.save()
+        self.close()
+        self.app.show_mode(self.app.settings["mode"])
+
+    def close(self):
+        if self._job:
+            self.win.after_cancel(self._job)
+        self.win.destroy()
+        self.app.connect_win = None
+
+
 class App:
     def __init__(self, root, server):
         self.root = root
@@ -1012,6 +1311,7 @@ class App:
             self.limits = [{"kind": k, "pct": v[0], "reset": v[1]} for k, v in last["l"].items()]
             self.updated_at = datetime.fromtimestamp(last["t"])
         self.busy, self._job = False, None
+        self.connect_win = self.account = None
 
         root.withdraw()  # se muestra la vista elegida al final
         root.title(APP_NAME)
@@ -1043,6 +1343,9 @@ class App:
         self.widget = Widget(self)
         self.tray = Tray(lambda cmd: self.events.put(("tray", cmd)))
         self.show_mode(self.settings["mode"])
+        threading.Thread(target=lambda: self.events.put(("connect", check_connection())), daemon=True).start()
+        if not self.settings.get("onboarded") and not self.history.points:  # instalación nueva
+            self.open_connect()
         if server:
             threading.Thread(target=self._listen, args=(server,), daemon=True).start()
         self.refresh()
@@ -1074,6 +1377,9 @@ class App:
         self.status = tk.Label(self.root, bg=BG, fg=MUTED, font=(FONT, 8), anchor="w", padx=12, pady=6,
                                justify="left")
         self.status.pack(fill="x", side="bottom")
+        self.connect_btn = tk.Button(self.root, text=tr("cta.connect"), command=self.open_connect, bd=0,
+                                     cursor="hand2", bg=BG, fg=AMBER, activebackground=CARD,
+                                     activeforeground=AMBER, anchor="w", font=(FONT_B, 10), padx=12)
         self._apply_details()
         self._build_menu()
 
@@ -1109,6 +1415,7 @@ class App:
         m.add_command(label=tr("menu.widget"), command=lambda: self.show_mode("widget"))
         m.add_command(label=tr("menu.full"), command=lambda: self.show_mode("full"))
         m.add_command(label=tr("menu.hide"), command=self.hide)
+        m.add_command(label=tr("menu.account"), command=self.open_connect)
         m.add_separator()
         m.add_checkbutton(label=tr("menu.on_top"), variable=self.on_top, command=self._on_top_changed)
         m.add_checkbutton(label=tr("menu.autostart"), variable=self.autostart, command=self._autostart_changed)
@@ -1167,11 +1474,29 @@ class App:
         self._rebuild_widget()
         self.save()
 
+    def open_connect(self):
+        if self.connect_win:
+            self.connect_win.win.deiconify()
+            self.connect_win.win.lift()
+            self.connect_win.win.focus_force()
+        else:
+            self.connect_win = ConnectWindow(self)
+
+    def _on_connection(self, info):
+        status = info["status"] or {}
+        self.account = account_text(status) if status.get("loggedIn") else None
+        if self.connect_win:
+            self.connect_win.update(info)
+        self.render()
+
     def _lang_changed(self):
         """Cambia el idioma reconstruyendo la interfaz, sin reiniciar la app."""
         global LANG
         LANG = self.settings["lang"] = self.lang.get()
         self.save()
+        reopen = self.connect_win is not None
+        if reopen:
+            self.connect_win.close()
         for child in self.root.winfo_children():
             if child is not self.widget.win:
                 child.destroy()
@@ -1181,6 +1506,8 @@ class App:
         if self.tokens:
             self._render_tokens()
         self._draw_chart()
+        if reopen:
+            self.open_connect()
 
     def _alpha_changed(self):
         self.settings["alpha"] = self.alpha.get()
@@ -1307,9 +1634,19 @@ class App:
             self.root.after_cancel(self._job)
         self._job = self.root.after(self.interval.get() * 1000, self.refresh)
 
+    def _fetch_usage_renewing(self):
+        try:
+            return fetch_usage()
+        except AuthError as e:
+            claude = find_claude() if e.key == "err.token" else None
+            if not claude:
+                raise
+            auth_status(claude)  # al ejecutarse, Claude Code renueva su token si ha caducado
+            return fetch_usage()
+
     def _fetch_worker(self):
         try:
-            self.events.put(("usage", fetch_usage()))
+            self.events.put(("usage", self._fetch_usage_renewing()))
         except RateLimited as e:
             self.events.put(("ratelimit", (e.key, e.kw)))
         except AuthError as e:
@@ -1332,12 +1669,16 @@ class App:
                 self.busy = False
                 self.error = payload
                 self.render()
+                if payload[0] in AUTH_ERRORS and not self.settings.get("onboarded") and not self.connect_win:
+                    self.open_connect()
                 if kind == "ratelimit":  # no insistir: esperar antes del próximo intento
                     self.root.after_cancel(self._job)
                     self._job = self.root.after(RATE_LIMIT_WAIT * 1000, self.refresh)
             elif kind == "tokens":
                 self.tokens = payload
                 self._render_tokens()
+            elif kind == "connect":
+                self._on_connection(payload)
             elif kind == "show":
                 self.show_mode(self.settings["mode"])
             elif kind == "quit":
@@ -1358,6 +1699,8 @@ class App:
             self._check_alerts(limits)
         self.history.add(limits)
         self.data, self.limits, self.error = data, limits, None
+        if self.connect_win and self.connect_win.info:  # marcar "leer tu uso" en cuanto llega el dato
+            self.connect_win.update(self.connect_win.info)
         self.updated_at = datetime.now()
         self.render()
         self._draw_chart()
@@ -1418,11 +1761,17 @@ class App:
         tip = " · ".join(f"{short(lim['kind'])} {lim['pct']:.0f}%" for lim in limits)
         self.tray.set_tip(f"Claude · {tip}" if tip else APP_NAME)
 
+        if self.error and self.error[0] in AUTH_ERRORS:
+            self.connect_btn.pack(fill="x", side="bottom")
+        else:
+            self.connect_btn.pack_forget()
         if self.error:
             stale = "\n" + tr("status.last", time=f"{self.updated_at:%H:%M}") if self.updated_at else ""
             self.status.config(text=tr(self.error[0], **self.error[1]) + stale, fg=AMBER)
         else:
             stamp = "\n" + tr("status.updated", time=f"{self.updated_at:%H:%M:%S}") if self.updated_at else ""
+            if self.account:
+                stamp += "\n" + tr("status.account", account=self.account)
             self.status.config(text=note + stamp, fg=MUTED)
 
     def _draw_chart(self):

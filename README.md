@@ -27,9 +27,9 @@ A Windows desktop widget that shows **how much of your Claude plan you've used**
 
 1. Download **`ClaudeUsage-Setup.exe`** from [Releases](../../releases/latest).
 2. Run it and click **Install**. If SmartScreen appears, choose *More info → Run anyway*; it shows up because the executable isn't signed.
-3. The app appears in the Start menu as **Claude Usage**.
+3. On first launch, a short wizard connects the app to your Claude account: it checks that [Claude Code](https://claude.com/claude-code) is installed (and can install it for you), opens your browser to sign in to Claude, and confirms it can read your usage. Everything updates by itself as you go.
 
-**Requirement:** [Claude Code](https://claude.com/claude-code) installed and signed in on the PC (run `claude` once).
+You can reopen the wizard any time from the menu (*Claude account…*) to see which account is connected or to switch accounts. A Claude subscription (Pro, Max, Team…) is required, since usage limits only apply to subscriptions.
 
 To uninstall: *Settings → Apps → Installed apps → Claude Usage*.
 
