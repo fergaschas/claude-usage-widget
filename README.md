@@ -6,6 +6,8 @@ A Windows desktop widget that shows **how much of your Claude plan you've used**
 
 > Unofficial project, not affiliated with Anthropic.
 
+**Latest version: 2.5.1** · [Download `ClaudeUsage-Setup.exe`](../../releases/latest/download/ClaudeUsage-Setup.exe) · [What's new](#version-history)
+
 <p>
   <img src="docs/widget-large.png" alt="Large style" height="260">
   <img src="docs/widget-rings.png" alt="Rings style" height="190">
@@ -26,11 +28,13 @@ A Windows desktop widget that shows **how much of your Claude plan you've used**
 
 ## Installation
 
-1. Download **`ClaudeUsage-Setup.exe`** from [Releases](../../releases/latest).
+1. Download **[`ClaudeUsage-Setup.exe`](../../releases/latest/download/ClaudeUsage-Setup.exe)** (latest version) or pick one from [Releases](../../releases).
 2. Run it and click **Install**. If SmartScreen appears, choose *More info → Run anyway*; it shows up because the executable isn't signed.
 3. On first launch, a short wizard connects the app to your Claude account: it checks that [Claude Code](https://claude.com/claude-code) is installed (and can install it for you), opens your browser to sign in to Claude, and confirms it can read your usage. Everything updates by itself as you go.
 
 You can reopen the wizard any time from the menu (*Claude account…*) to see which account is connected or to switch accounts. A Claude subscription (Pro, Max, Team…) is required, since usage limits only apply to subscriptions.
+
+**Already installed?** Version 2.5 and later update themselves from inside the app. If you have 2.4 or earlier, run the new installer once: it detects your installation, offers *Update* and keeps your history and settings.
 
 To uninstall: *Settings → Apps → Installed apps → Claude Usage*.
 
@@ -59,9 +63,27 @@ powershell -ExecutionPolicy Bypass -File build.ps1
 | File | What it is |
 |---|---|
 | `ClaudeUsage.pyw` | The app (widget, tray, notifications, uninstall via `--uninstall`) |
-| `setup_installer.py` | The installer; supports silent install with `--silent [--dir PATH] [--no-desktop] [--no-autostart] [--no-launch]`, and `--lang es\|en` to force its language |
+| `setup_installer.py` | The installer; supports silent install with `--silent [--dir PATH] [--no-desktop] [--no-autostart] [--no-launch]`, `--update` (used by the in-app updater; keeps the current shortcut and start-with-Windows choice) and `--lang es\|en` to force its language |
 | `build.ps1` | Builds both executables |
 | `packaging/` | Version metadata for the `.exe` files |
+
+### Publishing a new version
+
+The in-app updater reads the latest GitHub release, so each release must follow this format:
+
+1. Bump the version in `APP_VERSION` (`ClaudeUsage.pyw`), `VERSION` (`setup_installer.py`) and both files in `packaging/`.
+2. Build with `build.ps1`.
+3. Create a GitHub release tagged **`vX.Y.Z`** (for example `v2.5.1`) and attach **`dist\ClaudeUsage-Setup.exe`** with that exact name. GitHub publishes its SHA-256 checksum, which the app verifies before installing.
+
+## Version history
+
+| Version | Changes |
+|---|---|
+| **2.5.1** | Fixes for in-app updates: `v2.5` and `v2.5.0` count as the same version, and the app no longer gets stuck on *Installing the update…* if the installer fails to start. |
+| **2.5** | **In-app updates** with SHA-256 verification. Better Claude Code detection: the copy bundled with the Claude desktop app, nvm, scoop, bun, volta, WSL and `CLAUDE_CONFIG_DIR`. New *Copy diagnostics* button. |
+| **2.4** | **Connection wizard** on first run: installs Claude Code if needed, signs you in to Claude and checks your usage. *Not connected to Claude · Connect* notice in the widget. |
+| **2.3** | **English and Spanish** interface, switchable from the menu. |
+| **2.2** | First public release. |
 
 ## License
 
