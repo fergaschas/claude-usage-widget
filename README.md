@@ -15,10 +15,10 @@ A Windows desktop widget that shows **how much of your Claude plan you've used**
 **Latest version: 2.5.2** · [Download `ClaudeUsage-Setup.exe`](../../releases/latest/download/ClaudeUsage-Setup.exe) · [What's new](#version-history)
 
 <p>
-  <img src="docs/widget-large.png" alt="Large style" height="260">
-  <img src="docs/widget-rings.png" alt="Rings style" height="190">
+  <img src="docs/widget-large-en.png" alt="Large style" width="288" align="top">
+  <img src="docs/widget-rings-en.png" alt="Rings style" width="296" align="top">
 </p>
-<img src="docs/widget-compact.png" alt="Compact style" height="80">
+<img src="docs/widget-compact-en.png" alt="Compact style" width="306">
 
 ## Features
 

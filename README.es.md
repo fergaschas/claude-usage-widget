@@ -15,10 +15,10 @@ Widget de escritorio para Windows que muestra **cuánto has usado de tu plan de 
 **Versión actual: 2.5.2** · [Descargar `ClaudeUsage-Setup.exe`](../../releases/latest/download/ClaudeUsage-Setup.exe) · [Novedades](#historial-de-versiones)
 
 <p>
-  <img src="docs/widget-large.png" alt="Estilo Grande" height="260">
-  <img src="docs/widget-rings.png" alt="Estilo Anillos" height="190">
+  <img src="docs/widget-large-es.png" alt="Estilo Grande" width="288" align="top">
+  <img src="docs/widget-rings-es.png" alt="Estilo Anillos" width="296" align="top">
 </p>
-<img src="docs/widget-compact.png" alt="Estilo Compacto" height="80">
+<img src="docs/widget-compact-es.png" alt="Estilo Compacto" width="306">
 
 ## Funciones
 
