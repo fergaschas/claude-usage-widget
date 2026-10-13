@@ -1477,7 +1477,11 @@ SETUP_ASSET = "claudeusage-setup.exe"
 
 
 def version_tuple(version):
-    return tuple(int(n) for n in re.findall(r"\d+", version)[:4])
+    """"v2.5.0" → (2, 5). Sin ceros finales, para que v2.5 y v2.5.0 se consideren la misma versión."""
+    parts = [int(n) for n in re.findall(r"\d+", version)[:4]]
+    while parts and parts[-1] == 0:
+        parts.pop()
+    return tuple(parts)
 
 
 def fetch_latest_release():
@@ -1807,9 +1811,15 @@ class App:
             subprocess.Popen([setup, "--silent", "--update", "--dir", str(APP_DIR)], env=env, cwd=Path(setup).parent,
                              creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP)
         except OSError as e:
-            self.update_state = None
-            self.render()
-            toast(APP_NAME, tr("update.failed", e=e))
+            self._update_failed(e)
+            return
+        # si el instalador no ha cerrado la app en 90 s, algo ha ido mal: no quedarse en "Instalando…"
+        self.root.after(90_000, lambda: self.update_state == ("installing",) and self._update_failed("timeout"))
+
+    def _update_failed(self, error):
+        self.update_state = None
+        self.render()
+        toast(APP_NAME, tr("update.failed", e=error))
 
     def open_connect(self):
         if self.connect_win:
@@ -2032,9 +2042,7 @@ class App:
             elif kind == "update_ready":
                 self._install_update(payload)
             elif kind == "update_failed":
-                self.update_state = None
-                self.render()
-                toast(APP_NAME, tr("update.failed", e=payload))
+                self._update_failed(payload)
             elif kind == "quit":
                 self.quit()
             elif kind == "tray":
