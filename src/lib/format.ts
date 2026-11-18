@@ -81,3 +81,36 @@ export function paceText(p: Pace): PaceText {
 }
 
 export const left = (l: Limit) => Math.max(0, 100 - l.pct).toFixed(0);
+
+/** "5 min", "2 h", "3 d" desde una fecha pasada */
+export function fmtAge(epoch: number): string {
+  const secs = Math.max(0, Date.now() / 1000 - epoch);
+  if (secs < 60) return "";
+  if (secs < 3600) return `${Math.floor(secs / 60)} min`;
+  if (secs < 86400) return `${Math.floor(secs / 3600)} h`;
+  return `${Math.floor(secs / 86400)} d`;
+}
+
+export interface Group {
+  provider: Limit["provider"];
+  name: string;
+  /** p. ej. "dato de hace 2 h" (Codex), o "" */
+  meta: string;
+  limits: Limit[];
+}
+
+/** Agrupa los límites por proveedor (Claude primero). */
+export function groupLimits(limits: Limit[], codexAt: number | null): Group[] {
+  const groups: Group[] = [];
+  for (const provider of ["claude", "codex"] as const) {
+    const items = limits.filter((l) => l.provider === provider);
+    if (!items.length) continue;
+    let meta = "";
+    if (provider === "codex" && codexAt) {
+      const age = fmtAge(codexAt);
+      meta = age ? tr("codex.age", { age }) : tr("codex.age_now");
+    }
+    groups.push({ provider, name: tr(`group.${provider}`), meta, limits: items });
+  }
+  return groups;
+}

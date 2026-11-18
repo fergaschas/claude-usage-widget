@@ -1,5 +1,6 @@
 //! Estado de la app, bucles en segundo plano, ventanas, bandeja, menú y comandos de la interfaz.
 
+use crate::codex::{self, CodexLimits};
 use crate::connect::{self, ConnInfo};
 use crate::core::{self, label, now, short, t, tr, Settings, APP_NAME, APP_VERSION, RATE_LIMIT_STEPS, THRESHOLDS};
 use crate::tokens::{self, TokenStats};
@@ -33,6 +34,9 @@ enum UpdateState {
 
 pub struct Inner {
     settings: Settings,
+    /// último dato de Codex (OpenAI), leído de sus registros locales
+    codex: CodexLimits,
+    codex_tokens: Option<TokenStats>,
     history: History,
     limits: Vec<Limit>,
     data: Value,
@@ -81,6 +85,8 @@ impl AppState {
         AppState {
             inner: Mutex::new(Inner {
                 settings,
+                codex: CodexLimits::default(),
+                codex_tokens: None,
                 history,
                 limits,
                 data: Value::Null,
@@ -130,6 +136,8 @@ struct LimitView {
     pace: Pace,
     /// sesión y semanal; el resto solo se muestra si el usuario lo pide
     primary: bool,
+    /// "claude" o "codex"
+    provider: &'static str,
 }
 
 /// Límites principales: la sesión y el semanal general (si la API no devuelve ninguno, todos).
@@ -169,6 +177,24 @@ struct Snapshot {
     update: Option<Value>,
     tokens: Option<TokenStats>,
     connect: Option<ConnectView>,
+    /// Codex: cuándo escribió su último dato, el plan y sus tokens
+    codex_at: Option<f64>,
+    codex_plan: Option<String>,
+    tokens_codex: Option<TokenStats>,
+}
+
+/// Límites a mostrar: los de Claude y, si está activado, los de Codex.
+fn all_limits(i: &Inner) -> Vec<&Limit> {
+    let codex = i.settings.bool("codex");
+    i.limits.iter().chain(i.codex.limits.iter().filter(|_| codex)).collect()
+}
+
+fn limit_primary(l: &Limit, claude: &[Limit]) -> bool {
+    l.primary.unwrap_or_else(|| is_primary(&l.kind, claude))
+}
+
+fn limit_short(l: &Limit) -> String {
+    l.short_name.clone().or_else(|| l.name.clone()).unwrap_or_else(|| short(&l.kind))
 }
 
 fn error_text(err: &Option<(String, Vec<(String, String)>)>) -> Option<String> {
@@ -271,7 +297,7 @@ fn snapshot(i: &Inner) -> Snapshot {
         "details": s.bool("details"), "chart_hours": s.f64("chart_hours"), "check_updates": s.bool("check_updates"),
         "mode": s.str("mode"), "alpha": s.f64("alpha"), "widget_style": s.str("widget_style"),
         "autostart": i.autostart, "show_all_limits": s.bool("show_all_limits"),
-        "collapsed": s.bool("collapsed"), "fade_idle": s.bool("fade_idle"),
+        "collapsed": s.bool("collapsed"), "fade_idle": s.bool("fade_idle"), "codex": s.bool("codex"),
     });
     let extra = &i.data["extra_usage"];
     let update = match (&i.update_state, &i.update_info) {
@@ -285,17 +311,17 @@ fn snapshot(i: &Inner) -> Snapshot {
         version: APP_VERSION,
         hotkey: i.hotkey,
         settings,
-        limits: i
-            .limits
-            .iter()
+        limits: all_limits(i)
+            .into_iter()
             .map(|l| LimitView {
                 kind: l.kind.clone(),
                 label: l.name.clone().unwrap_or_else(|| label(&l.kind)),
-                short: l.name.clone().unwrap_or_else(|| short(&l.kind)),
+                short: limit_short(l),
                 pct: l.pct,
                 reset: l.reset,
                 pace: usage::pace_info(l, &i.history),
-                primary: is_primary(&l.kind, &i.limits),
+                primary: limit_primary(l, &i.limits),
+                provider: l.provider,
             })
             .collect(),
         extra: if extra["is_enabled"] == true { extra["utilization"].as_f64() } else { None },
@@ -307,6 +333,9 @@ fn snapshot(i: &Inner) -> Snapshot {
         update,
         tokens: i.tokens.clone(),
         connect: i.connect_open.then(|| connect_view(i)),
+        codex_at: i.codex.at.filter(|_| s.bool("codex")),
+        codex_plan: i.codex.plan.clone(),
+        tokens_codex: i.codex_tokens.clone().filter(|t| s.bool("codex") && t.week.total() > 0),
     }
 }
 
@@ -314,14 +343,22 @@ fn snapshot(i: &Inner) -> Snapshot {
 pub fn emit(app: &AppHandle) {
     let (snap, tip, title) = {
         let i = lock(app);
-        let shown: Vec<&Limit> = i.limits.iter().filter(|l| is_primary(&l.kind, &i.limits)).collect();
-        let tip = shown.iter().map(|l| format!("{} {:.0}%", short(&l.kind), l.pct)).collect::<Vec<_>>().join(" · ");
-        let title = shown.iter().map(|l| format!("{:.0}%", l.pct)).collect::<Vec<_>>().join(" · ");
+        let shown: Vec<&Limit> = all_limits(&i).into_iter().filter(|l| limit_primary(l, &i.limits)).collect();
+        let part = |provider: &str, name: &str| {
+            let items: Vec<String> = shown
+                .iter()
+                .filter(|l| l.provider == provider)
+                .map(|l| format!("{} {:.0}%", limit_short(l), l.pct))
+                .collect();
+            (!items.is_empty()).then(|| format!("{name} · {}", items.join(" · ")))
+        };
+        let tip = [part("claude", "Claude"), part("codex", "Codex")].into_iter().flatten().collect::<Vec<_>>().join("\n");
+        let title = shown.iter().filter(|l| l.provider == "claude").map(|l| format!("{:.0}%", l.pct)).collect::<Vec<_>>().join(" · ");
         (snapshot(&i), tip, title)
     };
     let _ = app.emit("state", &snap);
     if let Some(tray) = app.tray_by_id("main") {
-        let _ = tray.set_tooltip(Some(if tip.is_empty() { APP_NAME.to_string() } else { format!("Claude · {tip}") }));
+        let _ = tray.set_tooltip(Some(if tip.is_empty() { APP_NAME.to_string() } else { tip }));
     }
     if let Some(w) = app.get_webview_window("main") {
         let _ = w.set_title(&if title.is_empty() { APP_NAME.to_string() } else { format!("{APP_NAME} · {title}") });
@@ -409,6 +446,31 @@ fn on_usage(app: &AppHandle, data: Value) {
     emit(app);
 }
 
+/// Nuevo dato de Codex: avisos (75/90/100 %) y refresco de la interfaz.
+fn on_codex(app: &AppHandle, data: CodexLimits) {
+    {
+        let mut i = lock(app);
+        let changed = data.at != i.codex.at
+            || data.limits.iter().map(|l| (l.pct, l.reset)).ne(i.codex.limits.iter().map(|l| (l.pct, l.reset)));
+        if !changed {
+            return;
+        }
+        if data.at != i.codex.at {
+            info!("codex: {}", data.limits.iter().map(|l| format!("{} {:.0}%", l.kind, l.pct)).collect::<Vec<_>>().join(" · "));
+        }
+        if i.settings.bool("notify") && i.settings.bool("codex") {
+            let named: Vec<Limit> = data
+                .limits
+                .iter()
+                .map(|l| Limit { name: Some(format!("Codex · {}", l.name.clone().unwrap_or_default())), ..l.clone() })
+                .collect();
+            check_alerts(&mut i, &named);
+        }
+        i.codex = data;
+    }
+    emit(app);
+}
+
 fn on_rate_limited(app: &AppHandle, retry_after: u64) {
     {
         let mut i = lock(app);
@@ -461,7 +523,7 @@ pub fn fmt_reset(epoch: Option<f64>) -> String {
 fn check_alerts(i: &mut Inner, limits: &[Limit]) {
     let mut notified = i.settings.get("notified").as_object().cloned().unwrap_or_default();
     for lim in limits {
-        let name = label(&lim.kind);
+        let name = lim.name.clone().unwrap_or_else(|| label(&lim.kind));
         if let Some((prev_pct, prev_reset)) = i.history.last(&lim.kind) {
             let new_window = matches!((lim.reset, prev_reset), (Some(r), Some(p)) if r - p > 1800.0);
             if prev_pct >= 50.0 && (lim.pct < prev_pct - 5.0 || new_window) {
@@ -1062,6 +1124,7 @@ fn build_menu<R: Runtime>(app: &AppHandle<R>, i: &Inner) -> tauri::Result<Menu<R
         Box::new(sep()?),
         Box::new(widget_sub),
         Box::new(check("notify", t("menu.notify"), s.bool("notify"))?),
+        Box::new(check("codex", t("menu.codex"), s.bool("codex"))?),
         Box::new(check("autostart", t("menu.autostart"), i.autostart)?),
         Box::new(sub(t("menu.interval"), &intervals)?),
         Box::new(sub(t("menu.lang"), &langs)?),
@@ -1122,6 +1185,10 @@ pub fn on_menu(app: &AppHandle, id: &str) {
         "notify" => {
             let on = !lock(app).settings.bool("notify");
             update_setting(app, "notify", json!(on));
+        }
+        "codex" => {
+            let on = !lock(app).settings.bool("codex");
+            update_setting(app, "codex", json!(on));
         }
         "fade_idle" | "hide_fullscreen" => {
             let on = !lock(app).settings.bool(kind);
@@ -1428,13 +1495,26 @@ pub fn setup(app: &AppHandle, server: TcpListener) -> tauri::Result<()> {
     std::thread::spawn(move || refresh_loop(h));
     let h = app.clone();
     std::thread::spawn(move || on_connection(&h, connect::check_connection()));
-    // tokens cada 5 min
+    // tokens cada 5 min (Claude Code y Codex)
     let h = app.clone();
     std::thread::spawn(move || loop {
         let stats = tokens::scan_tokens();
-        lock(&h).tokens = Some(stats);
+        let codex_stats = codex::installed().then(codex::scan_tokens);
+        {
+            let mut i = lock(&h);
+            i.tokens = Some(stats);
+            i.codex_tokens = codex_stats;
+        }
         emit(&h);
         std::thread::sleep(Duration::from_secs(TOKEN_SCAN_SECS));
+    });
+    // límites de Codex: Codex los escribe en sus registros tras cada respuesta; se leen cada 30 s
+    let h = app.clone();
+    std::thread::spawn(move || loop {
+        if codex::installed() {
+            on_codex(&h, codex::scan_limits());
+        }
+        std::thread::sleep(Duration::from_secs(30));
     });
     // actualizaciones: a los 8 s y luego cada 6 h
     let h = app.clone();

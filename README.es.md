@@ -33,6 +33,7 @@ Widget de escritorio para Windows que muestra **cuánto has usado de tu plan de 
   - **se atenúa** cuando el ratón no está encima, salvo si algún límite está cerca de agotarse;
   - **se pega a los bordes** de la pantalla al soltarlo cerca, y crece hacia el lado correcto según la esquina en la que esté;
   - **se oculta solo** mientras hay una app a pantalla completa (juegos, vídeos, presentaciones).
+- **Codex (OpenAI) también**: si usas [Codex](https://github.com/openai/codex), muestra sus límites de 5 h y semanal en una sección propia (y en la píldora), con avisos y previsión de ritmo, más sus tokens por día, modelo y proyecto. Se puede ocultar desde el menú (*Mostrar Codex (OpenAI)*).
 - **Bandeja del sistema** con los porcentajes en el tooltip, y atajo global **Ctrl+Alt+U** para mostrar u ocultar.
 - **Notificaciones de Windows** al 75 %, 90 % y 100 %, y cuando un límite se reinicia.
 - **Ventana completa** (doble clic en el widget) con el gráfico interactivo del historial de 24 h o 7 días y los tokens de Claude Code: por día, por tipo, por modelo y por proyecto.
@@ -70,6 +71,7 @@ Para desinstalar: *Configuración → Aplicaciones → Aplicaciones instaladas �
 
 - **Límites del plan:** la app lee el token OAuth que Claude Code guarda en `%USERPROFILE%\.claude\.credentials.json` y llama al mismo endpoint que usa el comando `/usage` (`api.anthropic.com/api/oauth/usage`). El token solo se envía a Anthropic. El endpoint no está documentado y podría cambiar.
 - **Tokens:** se cuentan a partir de los registros locales de Claude Code (`%USERPROFILE%\.claude\projects\**\*.jsonl`). Solo incluyen el uso de Claude Code en ese PC, no el chat de claude.ai.
+- **Codex:** Codex guarda en sus registros locales (`%USERPROFILE%\.codex\sessions\**\*.jsonl`, o `CODEX_HOME`) el estado de sus límites tras cada respuesta, y TokenPace lo lee de ahí, sin conectarse a OpenAI. Por eso el dato solo se actualiza cuando usas Codex, y se muestra cuándo es (*dato de hace 7 min*). Si una ventana ya se ha reiniciado desde entonces, se muestra a cero.
 - **Datos locales:** el historial y los ajustes se guardan en la carpeta `data\` junto al ejecutable (mismo formato que la versión 2).
 
 Está hecho con [Tauri 2](https://tauri.app): el núcleo en Rust y la interfaz en HTML/CSS/TypeScript sobre WebView2. El ejecutable ocupa unos pocos MB.
@@ -87,7 +89,7 @@ En desarrollo la app usa otro puerto de instancia única, así que se puede prob
 
 | Ruta | Qué es |
 |---|---|
-| `src-tauri/src/` | Núcleo en Rust: consulta del uso e historial (`usage.rs`), tokens (`tokens.rs`), conexión con Claude Code (`connect.rs`), ventanas, bandeja y menú (`app.rs`), actualizaciones (`update.rs`), instalador (`installer.rs`) y Windows (`winsys.rs`) |
+| `src-tauri/src/` | Núcleo en Rust: consulta del uso e historial (`usage.rs`), tokens (`tokens.rs`), Codex (`codex.rs`), conexión con Claude Code (`connect.rs`), ventanas, bandeja y menú (`app.rs`), actualizaciones (`update.rs`), instalador (`installer.rs`) y Windows (`winsys.rs`) |
 | `src/views/` | Interfaz: widget, ventana completa, asistente de conexión e instalador |
 | `src/i18n.json` | Textos en español e inglés, compartidos por Rust y la interfaz |
 | `build.ps1` | Compila la app y el instalador en `dist\` |

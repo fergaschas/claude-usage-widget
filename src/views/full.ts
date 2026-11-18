@@ -11,7 +11,7 @@ import {
   svgIcon,
   updateBanner,
 } from "../lib/dom";
-import { colorClass, fmtNum, fmtReset, hhmm, hhmmss, left, paceText } from "../lib/format";
+import { colorClass, fmtNum, fmtReset, groupLimits, hhmm, hhmmss, left, paceText } from "../lib/format";
 import { dayName, tr } from "../lib/i18n";
 import type { Limit, State, Tokens } from "../lib/types";
 
@@ -72,6 +72,7 @@ export function mount(root: HTMLElement) {
 
   let details = false;
   const rows = new Map<string, ReturnType<typeof limitCard>>();
+  const sectionMeta = new Map<string, HTMLElement>();
 
   onState((full) => {
     showAll = full.settings.show_all_limits;
@@ -81,7 +82,8 @@ export function mount(root: HTMLElement) {
     more.classList.toggle("hidden", !hidden.length);
     more.textContent = showAll ? tr("more.hide", { names }) : tr("more.show", { n: hidden.length, names });
     more.title = tr("more.title");
-    setText(title, tr("title"));
+    const providers = new Set(s.limits.map((l) => l.provider));
+    setText(title, providers.size > 1 ? "TokenPace" : tr("title"));
     refreshBtn.title = tr("btn.refresh");
     menuBtn.title = tr("btn.settings");
     setText(account, s.account ?? "");
@@ -90,20 +92,36 @@ export function mount(root: HTMLElement) {
     banners.replaceChildren(...[updateBanner(s), connectBanner(s)].filter((x): x is HTMLElement => !!x));
     banners.classList.toggle("hidden", !banners.childElementCount);
 
-    // tarjetas de límites
-    const kinds = s.limits.map((l) => l.kind).join(",");
-    if ([...rows.keys()].join(",") !== kinds) {
+    // tarjetas de límites, con un título por proveedor si hay más de uno (Claude, Codex)
+    const groups = groupLimits(s.limits, s.codex_at);
+    const multi = groups.length > 1;
+    const key = `${multi}|${s.limits.map((l) => l.kind).join(",")}`;
+    if (cards.dataset.key !== key) {
+      cards.dataset.key = key;
       cards.replaceChildren();
       rows.clear();
-      for (const l of s.limits) {
-        const c = limitCard();
-        rows.set(l.kind, c);
-        cards.append(c.el);
+      sectionMeta.clear();
+      for (const g of groups) {
+        if (multi) {
+          const meta = h("span.meta");
+          sectionMeta.set(g.provider, meta);
+          cards.append(h("div.section-title", {}, h("span", {}, g.name), meta));
+        }
+        for (const l of g.limits) {
+          const c = limitCard();
+          rows.set(l.kind, c);
+          cards.append(c.el);
+        }
       }
+    }
+    for (const g of groups) {
+      const meta = sectionMeta.get(g.provider);
+      if (meta) setText(meta, [g.provider === "codex" ? s.codex_plan : null, g.meta].filter(Boolean).join(" · "));
     }
     for (const l of s.limits) rows.get(l.kind)!.update(l);
     if (!s.limits.length) {
       cards.replaceChildren(h("div.card.empty", {}, s.updated_at ? tr("status.no_limits") : tr("loading")));
+      cards.dataset.key = "";
       rows.clear();
     }
 
@@ -115,8 +133,9 @@ export function mount(root: HTMLElement) {
     toggle.replaceChildren(svgIcon("chevron"), tr("details"));
     detailsBox.classList.toggle("hidden", !details);
     if (details) {
-      chart.update(s);
-      tokens.update(s.tokens);
+      // el historial guarda solo los límites de Claude
+      chart.update({ ...s, limits: s.limits.filter((l) => l.provider === "claude") });
+      tokens.update(s.tokens, s.tokens_codex);
     }
 
     renderStatus(s);
@@ -361,12 +380,39 @@ function historyCard() {
 
 function tokensCard() {
   const heading = h("h2");
+  const seg = h("div.segmented");
   const body = h("div");
-  const el = h("div.card", {}, h("div.card-head", {}, heading), body);
+  const el = h("div.card", {}, h("div.card-head", {}, heading, seg), body);
+  // Claude Code o Codex (este último solo si hay datos)
+  let source: "claude" | "codex" = "claude";
+  let last: [Tokens | null, Tokens | null] = [null, null];
   return {
     el,
-    update(t: Tokens | null) {
-      setText(heading, tr("tokens.title"));
+    update(claude: Tokens | null, codex: Tokens | null) {
+      last = [claude, codex];
+      if (!codex) source = "claude";
+      seg.classList.toggle("hidden", !codex);
+      seg.replaceChildren(
+        ...(
+          [
+            ["claude", "Claude Code"],
+            ["codex", "Codex"],
+          ] as const
+        ).map(([v, text]) =>
+          h(
+            `button${v === source ? ".active" : ""}`,
+            {
+              onclick: () => {
+                source = v;
+                this.update(...last);
+              },
+            },
+            text,
+          ),
+        ),
+      );
+      const t = source === "codex" ? codex : claude;
+      setText(heading, tr(source === "codex" ? "tokens.title_codex" : "tokens.title"));
       if (!t) {
         body.replaceChildren(h("div.empty", {}, tr("tokens.scanning")));
         return;
@@ -453,7 +499,7 @@ function tokensCard() {
           h("div", {}, h("div.sub-title", {}, tr("tokens.models_title")), rank(t.models, "var(--accent)")),
           h("div", {}, h("div.sub-title", {}, tr("tokens.projects_title")), rank(t.projects, "var(--blue)")),
         ),
-        h("div.note", {}, tr("tokens.note")),
+        source === "claude" ? h("div.note", {}, tr("tokens.note")) : h("div.note", {}, tr("codex.note")),
       );
     },
   };

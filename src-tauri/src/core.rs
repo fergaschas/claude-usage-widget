@@ -183,7 +183,7 @@ impl Settings {
     pub fn defaults() -> Map<String, Value> {
         json!({"on_top": true, "notify": true, "interval": 60, "details": false, "chart_hours": 24,
                "check_updates": true, "mode": "widget", "alpha": 1.0, "widget_style": "large", "lang": null,
-               "collapsed": false, "fade_idle": true, "hide_fullscreen": true})
+               "collapsed": false, "fade_idle": true, "hide_fullscreen": true, "codex": true})
         .as_object()
         .unwrap()
         .clone()

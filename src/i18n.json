@@ -193,7 +193,23 @@
   "btn.collapse": "Minimizar",
   "btn.expand": "Expandir · doble clic: ventana completa",
   "menu.widget_group": "Widget",
-  "menu.tools": "Herramientas"
+  "menu.tools": "Herramientas",
+  "menu.codex": "Mostrar Codex (OpenAI)",
+  "codex.window.session": "Sesión (5 h)",
+  "codex.window.daily": "Diario",
+  "codex.window.weekly": "Semanal",
+  "codex.window.monthly": "Mensual",
+  "codex.window.hours": "{n} h",
+  "codex.short.session": "Sesión",
+  "codex.short.daily": "Día",
+  "codex.short.weekly": "Semana",
+  "codex.short.monthly": "Mes",
+  "group.claude": "Claude",
+  "group.codex": "Codex",
+  "codex.age": "dato de hace {age}",
+  "codex.age_now": "ahora mismo",
+  "codex.note": "Se actualiza cuando usas Codex.",
+  "tokens.title_codex": "Tokens en Codex (este PC)"
  },
  "en": {
   "days": [
@@ -389,6 +405,22 @@
   "btn.collapse": "Collapse",
   "btn.expand": "Expand · double-click: full window",
   "menu.widget_group": "Widget",
-  "menu.tools": "Tools"
+  "menu.tools": "Tools",
+  "menu.codex": "Show Codex (OpenAI)",
+  "codex.window.session": "Session (5 h)",
+  "codex.window.daily": "Daily",
+  "codex.window.weekly": "Weekly",
+  "codex.window.monthly": "Monthly",
+  "codex.window.hours": "{n} h",
+  "codex.short.session": "Session",
+  "codex.short.daily": "Day",
+  "codex.short.weekly": "Week",
+  "codex.short.monthly": "Month",
+  "group.claude": "Claude",
+  "group.codex": "Codex",
+  "codex.age": "data from {age} ago",
+  "codex.age_now": "just now",
+  "codex.note": "Updates when you use Codex.",
+  "tokens.title_codex": "Codex tokens (this PC)"
  }
 }
