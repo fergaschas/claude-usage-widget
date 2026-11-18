@@ -12,7 +12,7 @@ Widget de escritorio para Windows que muestra **cuánto has usado de tu plan de 
 
 > Proyecto no oficial, sin relación con Anthropic. Hasta la versión 2.5 se llamaba *Claude Usage*.
 
-**Versión actual: 3.0.0** · [Descargar `TokenPace-Setup.exe`](../../releases/latest/download/TokenPace-Setup.exe) · [Novedades](#historial-de-versiones)
+**Versión actual: 3.1.0** · [Descargar `TokenPace-Setup.exe`](../../releases/latest/download/TokenPace-Setup.exe) · [Novedades](#historial-de-versiones)
 
 <p>
   <img src="docs/widget-large-es.png" alt="Estilo Grande" width="330" align="top">
@@ -113,6 +113,7 @@ El mismo ejecutable es la app, su instalador y su desinstalador: si su nombre co
 
 | Versión | Cambios |
 |---|---|
+| **3.1.0** | **Codex (OpenAI)**: sus límites de 5 h y semanal en una sección propia del widget, de la píldora y de la ventana completa, con avisos, previsión de ritmo y sus tokens por día, modelo y proyecto. Se leen de los registros locales de Codex, sin conectarse a OpenAI. Opción *Mostrar Codex (OpenAI)* en el menú. |
 | **3.0.0** | **Nuevo nombre, TokenPace, y app reescrita con Tauri** (Rust + interfaz web): ventanas transparentes con esquinas redondeadas, sombras y animaciones; anillos y gráficos suavizados; gráfico de historial interactivo; tokens por día, tipo, modelo y proyecto; menú agrupado. Widget pensado para no molestar: minimizar a píldora, atenuado en reposo, se pega a los bordes y se oculta con apps a pantalla completa. Los límites secundarios (Fable) se muestran bajo demanda. Ejecutable mucho más ligero. Se actualiza desde *Claude Usage* 2.5 conservando datos y ajustes. |
 | **2.5.2** | Arreglo para PCs que se quedaban atascados en *Anthropic limita las consultas*: las esperas crecen (5, 10, 20, 30 min). Nuevo registro (*Abrir registro*). |
 | **2.5.1** | Correcciones de las actualizaciones desde la app. |
