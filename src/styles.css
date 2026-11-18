@@ -1301,3 +1301,72 @@ body.full::-webkit-scrollbar-thumb {
 .full-root .more-btn {
   margin-top: 0;
 }
+
+/* secciones por proveedor (Claude, Codex) */
+.group + .group {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.group-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: var(--accent-hi);
+}
+
+.group-title .group-meta {
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--faint);
+}
+
+.group .large-list,
+.group .rings-list,
+.group .compact-list {
+  margin-top: 8px;
+}
+
+.compact-list {
+  grid-template-columns: 62px 104px 52px 50px;
+}
+
+.pill-group {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-left: 2px;
+}
+
+.pill-group:not(:nth-child(2)) {
+  padding-left: 10px;
+  border-left: 1px solid var(--line-strong);
+}
+
+/* ventana completa: título de cada proveedor */
+.section-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 4px 2px -2px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--accent-hi);
+}
+
+.section-title .meta {
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--faint);
+}

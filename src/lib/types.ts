@@ -14,6 +14,7 @@ export interface Limit {
   reset: number | null;
   pace: Pace;
   primary: boolean;
+  provider: "claude" | "codex";
 }
 
 export interface Split {
@@ -56,6 +57,7 @@ export interface State {
     show_all_limits: boolean;
     collapsed: boolean;
     fade_idle: boolean;
+    codex: boolean;
   };
   limits: Limit[];
   extra: number | null;
@@ -67,4 +69,7 @@ export interface State {
   update: { state: "available" | "downloading" | "installing"; version?: string; pct?: number } | null;
   tokens: Tokens | null;
   connect: { steps: Step[]; done: boolean } | null;
+  codex_at: number | null;
+  codex_plan: string | null;
+  tokens_codex: Tokens | null;
 }

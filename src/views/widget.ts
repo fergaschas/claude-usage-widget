@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { animateNumber, autoFit, connectBanner, h, onState, setColor, setText, svgIcon, updateBanner } from "../lib/dom";
-import { colorClass, fmtShort, left, paceText } from "../lib/format";
+import { colorClass, fmtShort, groupLimits, left, paceText } from "../lib/format";
 import { tr } from "../lib/i18n";
 import type { Limit, State } from "../lib/types";
 
@@ -24,7 +24,8 @@ export function mount(root: HTMLElement) {
   const dot = h("span.dot.live");
   const collapseBtn = h("button.icon-btn", { onclick: () => setCollapsed(true) }, svgIcon("minus"));
   const fullBtn = h("button.icon-btn", { onclick: () => invoke("show_mode_cmd", { mode: "full" }) }, svgIcon("expand"));
-  const head = h("div.w-head", {}, h("div.brand", {}, dot, "Claude"), fullBtn, collapseBtn);
+  const brandName = h("span", {}, "Claude");
+  const head = h("div.w-head", {}, h("div.brand", {}, dot, brandName), fullBtn, collapseBtn);
   const banners = h("div.w-banners");
   const body = h("div");
   const more = h("button.more-btn", { onclick: () => invoke("set_setting", { key: "show_all_limits", value: !showAll }) });
@@ -96,6 +97,7 @@ export function mount(root: HTMLElement) {
 
   let style = "";
   let rows = new Map<string, Row>();
+  let titles = new Map<string, HTMLElement>();
   let fitting = false;
 
   onState((s) => {
@@ -107,8 +109,6 @@ export function mount(root: HTMLElement) {
     if (st !== style) {
       style = st;
       card.className = `widget-card ${st}`;
-      body.replaceChildren();
-      rows = new Map();
     }
     dot.classList.toggle("warn", !!s.error);
     banners.replaceChildren(...[updateBanner(s), connectBanner(s)].filter((x): x is HTMLElement => !!x));
@@ -135,14 +135,20 @@ export function mount(root: HTMLElement) {
 
   function renderPill(s: State) {
     const limits = s.limits.filter((l) => l.primary);
+    const groups = groupLimits(limits, s.codex_at);
     const warn = !!s.error || !!s.update || !!connectBanner(s);
+    const item = (l: Limit) =>
+      h("span.pill-item", {}, miniRing(l), h(`span.num.${colorClass(l.pct)}`, {}, `${l.pct.toFixed(0)}%`));
     pill.replaceChildren(
       h(`span.dot${warn ? ".warn" : ""}`),
-      ...(limits.length
-        ? limits.map((l) => h("span.pill-item", {}, miniRing(l), h(`span.num.${colorClass(l.pct)}`, {}, `${l.pct.toFixed(0)}%`)))
+      ...(groups.length
+        ? groups.flatMap((g) => [...(groups.length > 1 ? [h("span.pill-group", {}, g.name)] : []), ...g.limits.map(item)])
         : [h("span.muted", {}, s.retry_at ?? "…")]),
     );
-    pill.title = [tr("btn.expand"), ...limits.map((l) => `${l.label}: ${l.pct.toFixed(0)}% · ${fmtShort(l.reset)}`)].join("\n");
+    pill.title = [
+      tr("btn.expand"),
+      ...groups.flatMap((g) => g.limits.map((l) => `${g.name} · ${l.label}: ${l.pct.toFixed(0)}% · ${fmtShort(l.reset)}`)),
+    ].join("\n");
   }
 
   function render(full: State) {
@@ -157,25 +163,38 @@ export function mount(root: HTMLElement) {
     if (!s.limits.length) {
       const text = connectBanner(s) ? "" : s.retry_at ? tr("wait.ratelimit", { time: s.retry_at }) : tr("loading");
       body.replaceChildren(text ? h("div.w-placeholder", {}, text) : "");
+      body.dataset.key = "";
       rows = new Map();
       return;
     }
-    let list = body.firstElementChild as HTMLElement | null;
+    // una sección por proveedor (Claude, Codex); con un solo proveedor, sin títulos
+    const groups = groupLimits(s.limits, s.codex_at);
+    const multi = groups.length > 1;
+    setText(brandName, multi ? "TokenPace" : (groups[0]?.name ?? "Claude"));
     const cls = { large: "large-list", rings: "rings-list", compact: "compact-list" }[style] ?? "large-list";
-    if (!list || !list.classList.contains(cls)) {
-      list = h(`div.${cls}`);
-      body.replaceChildren(list);
+    const key = `${style}|${multi}|${s.limits.map((l) => l.kind).join(",")}`;
+    if (body.dataset.key !== key) {
+      body.dataset.key = key;
       rows = new Map();
+      titles = new Map();
+      body.replaceChildren(
+        ...groups.map((g) => {
+          const list = h(`div.${cls}`);
+          for (const l of g.limits) {
+            const row = makeRow(style);
+            row.nodes.forEach((n) => list.append(n));
+            rows.set(l.kind, row);
+          }
+          if (!multi) return list;
+          const meta = h("span.group-meta");
+          titles.set(g.provider, meta);
+          return h("div.group", {}, h("div.group-title", {}, h("span", {}, g.name), meta), list);
+        }),
+      );
     }
-    const kinds = s.limits.map((l) => l.kind).join(",");
-    if ([...rows.keys()].join(",") !== kinds) {
-      list.replaceChildren();
-      rows = new Map();
-      for (const l of s.limits) {
-        const row = makeRow(style);
-        row.nodes.forEach((n) => list!.append(n));
-        rows.set(l.kind, row);
-      }
+    for (const g of groups) {
+      const meta = titles.get(g.provider);
+      if (meta) setText(meta, g.meta);
     }
     for (const l of s.limits) rows.get(l.kind)!.update(l);
   }

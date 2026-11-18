@@ -40,7 +40,7 @@ pub struct TokenStats {
     pub daily: Vec<(String, u64)>,
 }
 
-fn jsonl_files(dir: &Path, since: f64, out: &mut Vec<PathBuf>) {
+pub fn jsonl_files(dir: &Path, since: f64, out: &mut Vec<PathBuf>) {
     let Ok(entries) = fs::read_dir(dir) else { return };
     for e in entries.flatten() {
         let path = e.path();
@@ -122,12 +122,7 @@ pub fn scan_tokens() -> TokenStats {
         }
     }
 
-    let today = Local::now().date_naive();
-    let mut stats = TokenStats::default();
-    let mut models: HashMap<String, u64> = HashMap::new();
-    let mut projects: HashMap<String, u64> = HashMap::new();
-    let mut names: HashMap<String, String> = HashMap::new();
-    let mut daily: HashMap<NaiveDate, u64> = HashMap::new();
+    let mut acc = Acc::new();
     for (ts, model, cwd, u) in seen.into_values() {
         let Ok(when) = DateTime::parse_from_rfc3339(&ts) else { continue };
         if (when.timestamp() as f64) < since {
@@ -140,30 +135,61 @@ pub fn scan_tokens() -> TokenStats {
             cache_write: n("cache_creation_input_tokens"),
             cache_read: n("cache_read_input_tokens"),
         };
-        let total = parts.total();
-        if total == 0 {
-            continue;
-        }
-        let date = when.with_timezone(&Local).date_naive();
-        stats.week.add(&parts);
-        if date == today {
-            stats.today.add(&parts);
-        }
-        *daily.entry(date).or_default() += total;
-        *models.entry(pretty_model(&model)).or_default() += total;
-        let name = Path::new(&cwd).file_name().map(|s| s.to_string_lossy().to_string()).unwrap_or("?".into());
-        // rutas de Windows: sin distinguir mayúsculas
-        let shown = names.entry(name.to_lowercase()).or_insert(name).clone();
-        *projects.entry(shown).or_default() += total;
+        acc.add(when.with_timezone(&Local).date_naive(), &parts, &pretty_model(&model), &cwd);
     }
-    stats.models = sorted(models);
-    stats.projects = sorted(projects);
-    stats.daily = (0..TOKEN_DAYS)
-        .rev()
-        .map(|i| {
-            let d = today - Duration::days(i);
-            (d.format("%Y-%m-%d").to_string(), daily.get(&d).copied().unwrap_or(0))
-        })
-        .collect();
-    stats
+    acc.finish()
+}
+
+/// Suma tokens por día, modelo y proyecto (lo usan Claude Code y Codex).
+pub struct Acc {
+    today: NaiveDate,
+    stats: TokenStats,
+    models: HashMap<String, u64>,
+    projects: HashMap<String, u64>,
+    names: HashMap<String, String>,
+    daily: HashMap<NaiveDate, u64>,
+}
+
+impl Acc {
+    pub fn new() -> Self {
+        Acc {
+            today: Local::now().date_naive(),
+            stats: TokenStats::default(),
+            models: HashMap::new(),
+            projects: HashMap::new(),
+            names: HashMap::new(),
+            daily: HashMap::new(),
+        }
+    }
+
+    pub fn add(&mut self, date: NaiveDate, parts: &Split, model: &str, cwd: &str) {
+        let total = parts.total();
+        if total == 0 || date < self.today - Duration::days(TOKEN_DAYS - 1) {
+            return;
+        }
+        self.stats.week.add(parts);
+        if date == self.today {
+            self.stats.today.add(parts);
+        }
+        *self.daily.entry(date).or_default() += total;
+        *self.models.entry(model.to_string()).or_default() += total;
+        let name = Path::new(cwd).file_name().map(|s| s.to_string_lossy().to_string()).unwrap_or("?".into());
+        // rutas de Windows: sin distinguir mayúsculas
+        let shown = self.names.entry(name.to_lowercase()).or_insert(name).clone();
+        *self.projects.entry(shown).or_default() += total;
+    }
+
+    pub fn finish(mut self) -> TokenStats {
+        self.stats.models = sorted(self.models);
+        self.stats.projects = sorted(self.projects);
+        let (today, daily) = (self.today, self.daily);
+        self.stats.daily = (0..TOKEN_DAYS)
+            .rev()
+            .map(|i| {
+                let d = today - Duration::days(i);
+                (d.format("%Y-%m-%d").to_string(), daily.get(&d).copied().unwrap_or(0))
+            })
+            .collect();
+        self.stats
+    }
 }

@@ -58,13 +58,27 @@ pub fn fetch_usage(credentials: &PathBuf) -> Result<Value, FetchError> {
     }
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct Limit {
     pub kind: String,
     pub pct: f64,
     pub reset: Option<f64>,
-    /// nombre que da la API para límites nuevos (si lo da)
+    /// nombre completo; si falta, el traducido según `kind` (o el que da la API para límites nuevos)
     pub name: Option<String>,
+    /// nombre corto (widget); si falta, `name` o el traducido según `kind`
+    pub short_name: Option<String>,
+    /// duración de la ventana en segundos, si la fuente la indica (Codex)
+    pub window: Option<f64>,
+    /// "claude" (por defecto) o "codex"
+    pub provider: &'static str,
+    /// si la fuente dice si es un límite principal (Codex); para Claude se decide por `kind`
+    pub primary: Option<bool>,
+}
+
+impl Limit {
+    pub fn claude(kind: String, pct: f64, reset: Option<f64>, name: Option<String>) -> Self {
+        Limit { kind, pct, reset, name, provider: "claude", ..Default::default() }
+    }
 }
 
 fn to_epoch(v: &Value) -> Option<f64> {
@@ -109,13 +123,13 @@ pub fn parse_limits(data: &Value) -> Vec<Limit> {
             let name = ["display_name", "label", "name", "title", "model_display_name"]
                 .iter()
                 .find_map(|k| item[*k].as_str().filter(|s| !s.is_empty()).map(String::from));
-            Some(Limit { kind, pct: item["percent"].as_f64()?, reset: to_epoch(&item["resets_at"]), name })
+            Some(Limit::claude(kind, item["percent"].as_f64()?, to_epoch(&item["resets_at"]), name))
         })
         .collect();
     if out.is_empty() {
         for (key, kind) in LEGACY_KEYS {
             if let Some(pct) = data[key]["utilization"].as_f64() {
-                out.push(Limit { kind: kind.into(), pct, reset: to_epoch(&data[key]["resets_at"]), name: None });
+                out.push(Limit::claude(kind.into(), pct, to_epoch(&data[key]["resets_at"]), None));
             }
         }
     }
@@ -186,7 +200,7 @@ impl History {
         let (t, l) = self.points.last()?;
         let limits = l
             .iter()
-            .filter_map(|(k, v)| Some(Limit { kind: k.clone(), pct: v[0].as_f64()?, reset: v[1].as_f64(), name: None }))
+            .filter_map(|(k, v)| Some(Limit::claude(k.clone(), v[0].as_f64()?, v[1].as_f64(), None)))
             .collect();
         Some((*t, limits))
     }
@@ -232,7 +246,7 @@ pub struct Pace {
 }
 
 pub fn pace_info(lim: &Limit, history: &History) -> Pace {
-    let (Some(total), Some(reset)) = (window_seconds(&lim.kind), lim.reset) else {
+    let (Some(total), Some(reset)) = (lim.window.or_else(|| window_seconds(&lim.kind)), lim.reset) else {
         return Pace { state: "none", speed: None, unit: "h", eta: None, marker: None };
     };
     let now = now();

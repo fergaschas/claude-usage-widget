@@ -27,6 +27,7 @@ const state: State = {
     show_all_limits: false,
     collapsed: q.get("collapsed") === "1",
     fade_idle: false,
+    codex: true,
   },
   limits: [
     {
@@ -37,6 +38,7 @@ const state: State = {
       reset: now + 2 * H + 13 * 60 + 40,
       pace: { state: "ok", speed: 13.7, unit: "h", eta: null, marker: 55.7 },
       primary: true,
+      provider: "claude",
     },
     {
       kind: "weekly_all",
@@ -46,6 +48,7 @@ const state: State = {
       reset: now + 4 * 24 * H + 5 * H + 1800,
       pace: { state: "ok", speed: 7.6, unit: "day", eta: null, marker: 39.9 },
       primary: true,
+      provider: "claude",
     },
     {
       kind: "weekly_scoped",
@@ -55,6 +58,7 @@ const state: State = {
       reset: now + 4 * 24 * H + 5 * H + 1800,
       pace: { state: "ok", speed: 1.4, unit: "day", eta: null, marker: 39.9 },
       primary: false,
+      provider: "claude",
     },
   ],
   extra: null,
@@ -83,7 +87,46 @@ const state: State = {
     }),
   },
   connect: null,
+  codex_at: null,
+  codex_plan: null,
+  tokens_codex: null,
 };
+
+// ?codex=1: añade Codex (OpenAI) con datos de ejemplo
+if (q.get("codex") === "1") {
+  const es = lang === "es";
+  state.limits.push(
+    {
+      kind: "codex_session",
+      label: es ? "Sesión (5 h)" : "Session (5 h)",
+      short: es ? "Sesión" : "Session",
+      pct: 64,
+      reset: now + 1 * H + 41 * 60 + 40,
+      pace: { state: "hit", speed: 19.8, unit: "h", eta: now + 1.4 * H, marker: 66.3 },
+      primary: true,
+      provider: "codex",
+    },
+    {
+      kind: "codex_weekly",
+      label: es ? "Semanal" : "Weekly",
+      short: es ? "Semana" : "Week",
+      pct: 33,
+      reset: now + 2 * 24 * H + 9 * H + 1800,
+      pace: { state: "ok", speed: 7.1, unit: "day", eta: null, marker: 66.2 },
+      primary: true,
+      provider: "codex",
+    },
+  );
+  state.codex_at = now - 7 * 60;
+  state.codex_plan = "Plus";
+  state.tokens_codex = {
+    today: { input: 210_000, output: 96_000, cache_write: 0, cache_read: 3_400_000 },
+    week: { input: 1_300_000, output: 610_000, cache_write: 0, cache_read: 21_000_000 },
+    models: [["GPT-5.5 Codex", 22_910_000]],
+    projects: [["my-app", 15_000_000], ["scripts", 7_910_000]],
+    daily: state.tokens!.daily.map(([d], i) => [d, [2, 4, 0, 0, 6, 5, 3.7][i] * 1_000_000] as [string, number]),
+  };
+}
 
 /** Historial de ejemplo: cada ventana de 5 h de la sesión sube a su propio ritmo y se para cuando
  *  se deja de trabajar; la actual (empezó hace 2,8 h) va al 13,6 %/h y llega al 38 %. El semanal sube despacio. */
