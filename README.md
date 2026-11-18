@@ -14,6 +14,15 @@ A Windows desktop widget that shows **how much of your Claude plan you've used**
 
 **Latest version: 3.0.0** · [Download `TokenPace-Setup.exe`](../../releases/latest/download/TokenPace-Setup.exe) · [What's new](#version-history)
 
+<p>
+  <img src="docs/widget-large-en.png" alt="Large style" width="330" align="top">
+  <img src="docs/widget-rings-en.png" alt="Rings style" width="324" align="top">
+</p>
+<p>
+  <img src="docs/widget-compact-en.png" alt="Compact style" width="314" align="top">
+  <img src="docs/widget-pill-en.png" alt="Widget collapsed to a pill" width="183" align="top">
+</p>
+
 ## Features
 
 - **Real usage percentage** for the 5-hour session and the weekly limit, with a countdown to the next reset. Secondary limits (such as *Fable*) stay hidden until you click *Show Fable usage*.
@@ -30,6 +39,10 @@ A Windows desktop widget that shows **how much of your Claude plan you've used**
 - **CSV export** of the history, start with Windows, and an installer that doesn't need admin rights.
 - **English and Spanish**: follows your Windows language and can be switched from the menu (*Idioma / Language*).
 - **In-app updates** with SHA-256 verification, keeping your history, settings, shortcuts and start-with-Windows choice.
+
+<img src="docs/full-window-en.png" alt="Full window with usage limits, history chart and Claude Code tokens" width="380">
+
+*Full window (double-click the widget): limits with pace forecast, 24-hour / 7-day history and Claude Code tokens.*
 
 ## Installation
 
@@ -78,6 +91,7 @@ In development the app uses a different single-instance port, so you can test it
 | `src/views/` | Interface: widget, full window, connection wizard and installer |
 | `src/i18n.json` | English and Spanish strings, shared by Rust and the interface |
 | `build.ps1` | Builds the app and installer into `dist\` |
+| `scripts/screenshots/` | The `docs/` screenshots, rendered from the real interface with sample data: `npm run screenshots` (needs Microsoft Edge) |
 
 ### Build
 

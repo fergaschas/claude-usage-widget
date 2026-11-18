@@ -14,6 +14,15 @@ Widget de escritorio para Windows que muestra **cuánto has usado de tu plan de 
 
 **Versión actual: 3.0.0** · [Descargar `TokenPace-Setup.exe`](../../releases/latest/download/TokenPace-Setup.exe) · [Novedades](#historial-de-versiones)
 
+<p>
+  <img src="docs/widget-large-es.png" alt="Estilo Grande" width="330" align="top">
+  <img src="docs/widget-rings-es.png" alt="Estilo Anillos" width="324" align="top">
+</p>
+<p>
+  <img src="docs/widget-compact-es.png" alt="Estilo Compacto" width="314" align="top">
+  <img src="docs/widget-pill-es.png" alt="Widget minimizado a píldora" width="183" align="top">
+</p>
+
 ## Funciones
 
 - **Porcentaje de uso real** de la sesión de 5 h y del límite semanal, con cuenta atrás hasta el reinicio. Los límites secundarios (p. ej. *Fable*) quedan ocultos y se ven con el botón *Ver uso de Fable*.
@@ -30,6 +39,10 @@ Widget de escritorio para Windows que muestra **cuánto has usado de tu plan de 
 - **Exportación del historial a CSV**, arranque con Windows y un instalador que no necesita permisos de administrador.
 - **Español e inglés**: usa el idioma de Windows y se puede cambiar desde el menú (*Idioma / Language*).
 - **Actualizaciones desde la app** con verificación SHA-256, conservando el historial, los ajustes, los accesos directos y el inicio con Windows.
+
+<img src="docs/full-window-es.png" alt="Ventana completa con los límites, el gráfico de historial y los tokens de Claude Code" width="380">
+
+*Ventana completa (doble clic en el widget): límites con previsión de ritmo, historial de 24 h / 7 días y tokens de Claude Code.*
 
 ## Instalación
 
@@ -78,6 +91,7 @@ En desarrollo la app usa otro puerto de instancia única, así que se puede prob
 | `src/views/` | Interfaz: widget, ventana completa, asistente de conexión e instalador |
 | `src/i18n.json` | Textos en español e inglés, compartidos por Rust y la interfaz |
 | `build.ps1` | Compila la app y el instalador en `dist\` |
+| `scripts/screenshots/` | Capturas de `docs/` con la interfaz real y datos de ejemplo: `npm run screenshots` (necesita Microsoft Edge) |
 
 ### Compilar
 
