@@ -12,7 +12,7 @@ A Windows desktop widget that shows **how much of your Claude plan you've used**
 
 > Unofficial project, not affiliated with Anthropic. Up to version 2.5 it was called *Claude Usage*.
 
-**Latest version: 3.0.0** · [Download `TokenPace-Setup.exe`](../../releases/latest/download/TokenPace-Setup.exe) · [What's new](#version-history)
+**Latest version: 3.1.0** · [Download `TokenPace-Setup.exe`](../../releases/latest/download/TokenPace-Setup.exe) · [What's new](#version-history)
 
 <p>
   <img src="docs/widget-large-en.png" alt="Large style" width="330" align="top">
@@ -113,6 +113,7 @@ The same executable is the app, its installer and its uninstaller: when its name
 
 | Version | Changes |
 |---|---|
+| **3.1.0** | **Codex (OpenAI)**: its 5-hour and weekly limits get their own section in the widget, the pill and the full window, with alerts, pace forecast and its tokens by day, model and project. Read from Codex's local logs, without contacting OpenAI. *Show Codex (OpenAI)* option in the menu. |
 | **3.0.0** | **New name, TokenPace, and a rewrite on Tauri** (Rust + web UI): transparent windows with rounded corners, shadows and animations; smooth rings and charts; interactive history chart; tokens by day, type, model and project; grouped menu. A widget designed to stay out of the way: collapse to a pill, dim when idle, snap to edges and hide during full-screen apps. Secondary limits (Fable) are shown on demand. Much smaller executable. Updates from *Claude Usage* 2.5 keeping your data and settings. |
 | **2.5.2** | Fix for PCs stuck on *Anthropic is rate-limiting requests*: waits grow (5, 10, 20, 30 min). New log file (*Open log*). |
 | **2.5.1** | Fixes for in-app updates. |
