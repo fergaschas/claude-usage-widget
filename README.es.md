@@ -1,4 +1,4 @@
-# Claude Usage
+# TokenPace
 
 [English](README.md) · **Español**
 
@@ -6,100 +6,104 @@
 [![Descargas](https://img.shields.io/github/downloads/fergaschas/claude-usage-widget/total)](https://github.com/fergaschas/claude-usage-widget/releases)
 [![Licencia: MIT](https://img.shields.io/github/license/fergaschas/claude-usage-widget)](LICENSE)
 ![Plataforma: Windows](https://img.shields.io/badge/platform-Windows-0078D6)
-![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776AB)
+![Tauri 2](https://img.shields.io/badge/Tauri-2-24C8DB)
 
-Widget de escritorio para Windows que muestra **cuánto has usado de tu plan de Claude** (sesión de 5 h y límite semanal) y cuánto te queda, siempre a la vista.
+Widget de escritorio para Windows que muestra **cuánto has usado de tu plan de Claude** (sesión de 5 h y límite semanal), cuánto te queda y **a qué ritmo lo gastas**, siempre a la vista pero sin estorbar.
 
-> Proyecto no oficial, sin relación con Anthropic.
+> Proyecto no oficial, sin relación con Anthropic. Hasta la versión 2.5 se llamaba *Claude Usage*.
 
-**Versión actual: 2.5.2** · [Descargar `ClaudeUsage-Setup.exe`](../../releases/latest/download/ClaudeUsage-Setup.exe) · [Novedades](#historial-de-versiones)
-
-<p>
-  <img src="docs/widget-large-es.png" alt="Estilo Grande" width="288" align="top">
-  <img src="docs/widget-rings-es.png" alt="Estilo Anillos" width="296" align="top">
-</p>
-<img src="docs/widget-compact-es.png" alt="Estilo Compacto" width="306">
+**Versión actual: 3.0.0** · [Descargar `TokenPace-Setup.exe`](../../releases/latest/download/TokenPace-Setup.exe) · [Novedades](#historial-de-versiones)
 
 ## Funciones
 
-- **Porcentaje de uso real** de cada límite de tu plan (sesión de 5 h, semanal y, si aplica, Opus/Sonnet), con cuenta atrás hasta el reinicio.
-- **Previsión de ritmo**: calcula a qué velocidad consumes y avisa si vas a llegar al límite antes del reinicio. Una línea blanca en cada barra marca el tiempo transcurrido de la ventana.
-- **Widget flotante** sin bordes y siempre encima, en tres estilos (Grande, Anillos, Compacto) y con opacidad ajustable. Se arrastra a cualquier sitio y recuerda su posición.
-- **Bandeja del sistema** con los porcentajes en el tooltip, y atajo global **Ctrl+Alt+U** para mostrar u ocultar el widget.
-- **Notificaciones de Windows** al llegar al 75 %, al 90 % y al 100 %, y cuando un límite se reinicia.
-- **Ventana completa** (doble clic en el widget) con un gráfico del historial de 24 h o 7 días y los tokens de Claude Code por día, modelo y proyecto.
+- **Porcentaje de uso real** de la sesión de 5 h y del límite semanal, con cuenta atrás hasta el reinicio. Los límites secundarios (p. ej. *Fable*) quedan ocultos y se ven con el botón *Ver uso de Fable*.
+- **Previsión de ritmo**: calcula a qué velocidad consumes y avisa si vas a llegar al límite antes del reinicio. Una marca blanca en cada barra o anillo indica el tiempo transcurrido de la ventana.
+- **Widget que no molesta**:
+  - ventana transparente con esquinas redondeadas y sombra, en tres estilos (Grande, Anillos, Compacto);
+  - **se minimiza a una píldora** con los porcentajes (botón —); un clic la vuelve a abrir;
+  - **se atenúa** cuando el ratón no está encima, salvo si algún límite está cerca de agotarse;
+  - **se pega a los bordes** de la pantalla al soltarlo cerca, y crece hacia el lado correcto según la esquina en la que esté;
+  - **se oculta solo** mientras hay una app a pantalla completa (juegos, vídeos, presentaciones).
+- **Bandeja del sistema** con los porcentajes en el tooltip, y atajo global **Ctrl+Alt+U** para mostrar u ocultar.
+- **Notificaciones de Windows** al 75 %, 90 % y 100 %, y cuando un límite se reinicia.
+- **Ventana completa** (doble clic en el widget) con el gráfico interactivo del historial de 24 h o 7 días y los tokens de Claude Code: por día, por tipo, por modelo y por proyecto.
 - **Exportación del historial a CSV**, arranque con Windows y un instalador que no necesita permisos de administrador.
-- **Español e inglés**: usa el idioma de Windows y se puede cambiar en cualquier momento desde el menú (*Idioma / Language*).
-- **Actualizaciones desde la app**: comprueba en GitHub si hay versiones nuevas y muestra *Nueva versión X disponible · Actualizar*. Con un clic descarga el instalador, verifica su suma SHA-256 y reinicia la app ya actualizada, conservando el historial, los ajustes, los accesos directos y el inicio con Windows. También puedes usar *Buscar actualizaciones* en el menú.
-
-<img src="docs/full-window-es.png" alt="Ventana completa con los límites de uso, el gráfico de historial y los tokens de Claude Code" width="426">
-
-*Ventana completa (doble clic en el widget): límites con previsión de ritmo, historial de 24 h / 7 días y tokens de Claude Code.*
+- **Español e inglés**: usa el idioma de Windows y se puede cambiar desde el menú (*Idioma / Language*).
+- **Actualizaciones desde la app** con verificación SHA-256, conservando el historial, los ajustes, los accesos directos y el inicio con Windows.
 
 ## Instalación
 
-1. Descarga **[`ClaudeUsage-Setup.exe`](../../releases/latest/download/ClaudeUsage-Setup.exe)** (última versión) o elige una en [Releases](../../releases).
+1. Descarga **[`TokenPace-Setup.exe`](../../releases/latest/download/TokenPace-Setup.exe)** (última versión) o elige una en [Releases](../../releases).
 2. Ejecútalo y pulsa **Instalar**. Si aparece SmartScreen, elige *Más información → Ejecutar de todas formas*; sale porque el ejecutable no está firmado.
-3. La primera vez que la abras, un asistente conecta la app con tu cuenta de Claude: comprueba que [Claude Code](https://claude.com/claude-code) está instalado (y puede instalarlo por ti), abre el navegador para que inicies sesión en Claude y confirma que puede leer tu uso. Todo se actualiza solo a medida que avanzas.
+3. En el primer arranque, un asistente conecta la app con tu cuenta de Claude: comprueba que [Claude Code](https://claude.com/claude-code) está instalado (y puede instalarlo), abre el navegador para iniciar sesión en Claude y confirma que puede leer tu uso.
 
-Puedes volver a abrir el asistente cuando quieras desde el menú (*Cuenta de Claude…*) para ver qué cuenta está conectada o cambiarla. Necesitas una suscripción de Claude (Pro, Max, Team…), porque los límites de uso solo existen en las suscripciones.
+Requiere Windows 10 u 11 con WebView2 (incluido en Windows 11 y en Windows 10 actualizado) y una suscripción de Claude (Pro, Max, Team…), porque los límites de uso solo existen con suscripción.
 
-**¿Ya la tienes instalada?** Desde la versión 2.5, la app se actualiza sola desde dentro. Si tienes la 2.4 o anterior, ejecuta el nuevo instalador una vez: detecta tu instalación, ofrece *Actualizar* y conserva el historial y los ajustes.
+**¿Tienes *Claude Usage* 2.5?** Se actualiza sola a TokenPace desde la app: se conservan la carpeta, el historial y los ajustes, y se sustituyen el acceso directo y el inicio con Windows por los de TokenPace. Con la 2.4 o anteriores, ejecuta una vez el instalador nuevo.
 
-Para desinstalarla: *Configuración → Aplicaciones → Aplicaciones instaladas → Claude Usage*.
+Para desinstalar: *Configuración → Aplicaciones → Aplicaciones instaladas → TokenPace*.
+
+## Uso
+
+| Acción | Resultado |
+|---|---|
+| Arrastrar el widget | Moverlo; al soltarlo cerca de un borde se pega a él |
+| Botón **—** | Minimizar a la píldora; clic en la píldora para expandir |
+| Doble clic | Ventana completa (historial y tokens) |
+| Clic derecho | Menú: estilo, opacidad, atenuado, idioma, cuenta, herramientas… |
+| **Ctrl+Alt+U** o clic en el icono de la bandeja | Mostrar u ocultar |
 
 ## Cómo funciona
 
-- **Límites del plan:** la app lee el token OAuth que Claude Code guarda en `%USERPROFILE%\.claude\.credentials.json` y consulta el mismo endpoint que usa el comando `/usage` (`api.anthropic.com/api/oauth/usage`). El token solo se envía a Anthropic. El endpoint no está documentado y podría cambiar.
-- **Tokens:** se calculan leyendo los registros locales de Claude Code (`%USERPROFILE%\.claude\projects\**\*.jsonl`). Solo cuentan el uso de Claude Code en ese PC, no el chat de claude.ai.
-- **Datos locales:** el historial y los ajustes se guardan en la carpeta `data\`, junto al ejecutable.
+- **Límites del plan:** la app lee el token OAuth que Claude Code guarda en `%USERPROFILE%\.claude\.credentials.json` y llama al mismo endpoint que usa el comando `/usage` (`api.anthropic.com/api/oauth/usage`). El token solo se envía a Anthropic. El endpoint no está documentado y podría cambiar.
+- **Tokens:** se cuentan a partir de los registros locales de Claude Code (`%USERPROFILE%\.claude\projects\**\*.jsonl`). Solo incluyen el uso de Claude Code en ese PC, no el chat de claude.ai.
+- **Datos locales:** el historial y los ajustes se guardan en la carpeta `data\` junto al ejecutable (mismo formato que la versión 2).
 
-No usa dependencias externas: solo la librería estándar de Python (tkinter, ctypes y winreg).
+Está hecho con [Tauri 2](https://tauri.app): el núcleo en Rust y la interfaz en HTML/CSS/TypeScript sobre WebView2. El ejecutable ocupa unos pocos MB.
 
-## Ejecutar desde el código
+## Desarrollo
+
+Requisitos: [Node 18+](https://nodejs.org), [Rust](https://rustup.rs) (toolchain MSVC) y Visual Studio Build Tools con C++.
 
 ```bash
-pythonw ClaudeUsage.pyw
+npm install
+npx tauri dev        # app con recarga en caliente
 ```
 
-## Compilar los ejecutables
+En desarrollo la app usa otro puerto de instancia única, así que se puede probar con la versión instalada abierta. Con `CLAUDE_USAGE_OFFLINE=1` no consulta a Anthropic (útil para trabajar en la interfaz sin gastar consultas).
 
-Necesitas Python 3.10 o superior. El script crea un entorno temporal con PyInstaller y deja `ClaudeUsage.exe` y `ClaudeUsage-Setup.exe` en `dist\`:
+| Ruta | Qué es |
+|---|---|
+| `src-tauri/src/` | Núcleo en Rust: consulta del uso e historial (`usage.rs`), tokens (`tokens.rs`), conexión con Claude Code (`connect.rs`), ventanas, bandeja y menú (`app.rs`), actualizaciones (`update.rs`), instalador (`installer.rs`) y Windows (`winsys.rs`) |
+| `src/views/` | Interfaz: widget, ventana completa, asistente de conexión e instalador |
+| `src/i18n.json` | Textos en español e inglés, compartidos por Rust y la interfaz |
+| `build.ps1` | Compila la app y el instalador en `dist\` |
+
+### Compilar
 
 ```bash
 powershell -ExecutionPolicy Bypass -File build.ps1
 ```
 
-| Archivo | Qué es |
-|---|---|
-| `ClaudeUsage.pyw` | La aplicación (widget, bandeja, notificaciones, desinstalación con `--uninstall`) |
-| `setup_installer.py` | El instalador; admite instalación silenciosa con `--silent [--dir RUTA] [--no-desktop] [--no-autostart] [--no-launch]`, `--update` (lo usa el actualizador de la app; conserva el acceso directo y el inicio con Windows actuales) y `--lang es\|en` para forzar su idioma |
-| `build.ps1` | Compila ambos ejecutables |
-| `packaging/` | Metadatos de versión de los `.exe` |
+El mismo ejecutable es la app, su instalador y su desinstalador: si su nombre contiene *setup* funciona como instalador (`TokenPace-Setup.exe --silent [--dir RUTA] [--no-desktop] [--no-autostart] [--no-launch] [--update] [--lang es|en]`), y con `--uninstall [--silent]` desinstala.
 
 ### Publicar una versión nueva
 
-El actualizador de la app lee la última Release de GitHub, así que cada versión debe seguir este formato:
-
-1. Sube la versión en `APP_VERSION` (`ClaudeUsage.pyw`), `VERSION` (`setup_installer.py`) y los dos archivos de `packaging/`.
+1. Sube la versión en `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml` y `package.json`.
 2. Compila con `build.ps1`.
-3. Crea una Release en GitHub con la etiqueta **`vX.Y.Z`** (por ejemplo `v2.5.1`) y adjunta **`dist\ClaudeUsage-Setup.exe`** con ese nombre exacto. GitHub publica su suma SHA-256, que la app verifica antes de instalar.
+3. Crea una Release en GitHub con la etiqueta **`vX.Y.Z`** y adjunta **`dist\TokenPace-Setup.exe`** y **`dist\ClaudeUsage-Setup.exe`** (el mismo archivo; este nombre es el que buscan las instalaciones 2.x para actualizarse). GitHub publica su suma SHA-256, que la app verifica antes de instalar.
 
 ## Historial de versiones
 
 | Versión | Cambios |
 |---|---|
-| **2.5.2** | Arreglo para PCs que se quedaban atascados en *Anthropic limita las consultas*: el asistente de conexión ya no vuelve a consultar cada 10 segundos, las esperas crecen (5, 10, 20, 30 min) y nada se las salta salvo el botón de actualizar. El widget muestra la hora del reintento. Nuevo registro (*Abrir registro* en el menú), incluido también en *Copiar diagnóstico*. |
-| **2.5.1** | Correcciones de las actualizaciones desde la app: `v2.5` y `v2.5.0` cuentan como la misma versión, y la app ya no se queda en *Instalando la actualización…* si el instalador no llega a arrancar. |
-| **2.5** | **Actualizaciones desde la app** con verificación SHA-256. Mejor detección de Claude Code: la copia incluida en la app de escritorio de Claude, nvm, scoop, bun, volta, WSL y `CLAUDE_CONFIG_DIR`. Nuevo botón *Copiar diagnóstico*. |
-| **2.4** | **Asistente de conexión** en el primer uso: instala Claude Code si hace falta, inicia sesión en Claude y comprueba el uso. Aviso *Sin conexión con Claude · Conectar* en el widget. |
-| **2.3** | Interfaz en **español e inglés**, seleccionable desde el menú. |
+| **3.0.0** | **Nuevo nombre, TokenPace, y app reescrita con Tauri** (Rust + interfaz web): ventanas transparentes con esquinas redondeadas, sombras y animaciones; anillos y gráficos suavizados; gráfico de historial interactivo; tokens por día, tipo, modelo y proyecto; menú agrupado. Widget pensado para no molestar: minimizar a píldora, atenuado en reposo, se pega a los bordes y se oculta con apps a pantalla completa. Los límites secundarios (Fable) se muestran bajo demanda. Ejecutable mucho más ligero. Se actualiza desde *Claude Usage* 2.5 conservando datos y ajustes. |
+| **2.5.2** | Arreglo para PCs que se quedaban atascados en *Anthropic limita las consultas*: las esperas crecen (5, 10, 20, 30 min). Nuevo registro (*Abrir registro*). |
+| **2.5.1** | Correcciones de las actualizaciones desde la app. |
+| **2.5** | **Actualizaciones desde la app** con verificación SHA-256. Mejor detección de Claude Code. Botón *Copiar diagnóstico*. |
+| **2.4** | **Asistente de conexión** en el primer uso. |
+| **2.3** | Interfaz en **español e inglés**. |
 | **2.2** | Primera versión pública. |
-
-## Enlaces
-
-- **Web:** [última versión](https://github.com/fergaschas/claude-usage-widget/releases/latest), con el instalador y las novedades.
-- **Temas:** [claude](https://github.com/topics/claude) · [claude-code](https://github.com/topics/claude-code) · [anthropic](https://github.com/topics/anthropic) · [windows](https://github.com/topics/windows) · [widget](https://github.com/topics/widget) · [desktop-widget](https://github.com/topics/desktop-widget) · [usage-tracker](https://github.com/topics/usage-tracker) · [rate-limits](https://github.com/topics/rate-limits) · [system-tray](https://github.com/topics/system-tray) · [python](https://github.com/topics/python) · [tkinter](https://github.com/topics/tkinter)
 
 ## Licencia
 

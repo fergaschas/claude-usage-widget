@@ -1,4 +1,4 @@
-# Claude Usage
+# TokenPace
 
 **English** · [Español](README.es.md)
 
@@ -6,100 +6,104 @@
 [![Downloads](https://img.shields.io/github/downloads/fergaschas/claude-usage-widget/total)](https://github.com/fergaschas/claude-usage-widget/releases)
 [![License: MIT](https://img.shields.io/github/license/fergaschas/claude-usage-widget)](LICENSE)
 ![Platform: Windows](https://img.shields.io/badge/platform-Windows-0078D6)
-![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776AB)
+![Tauri 2](https://img.shields.io/badge/Tauri-2-24C8DB)
 
-A Windows desktop widget that shows **how much of your Claude plan you've used** (the 5-hour session and the weekly limit) and how much you have left, always in view.
+A Windows desktop widget that shows **how much of your Claude plan you've used** (the 5-hour session and the weekly limit), how much you have left and **how fast you're burning through it**: always in view, never in the way.
 
-> Unofficial project, not affiliated with Anthropic.
+> Unofficial project, not affiliated with Anthropic. Up to version 2.5 it was called *Claude Usage*.
 
-**Latest version: 2.5.2** · [Download `ClaudeUsage-Setup.exe`](../../releases/latest/download/ClaudeUsage-Setup.exe) · [What's new](#version-history)
-
-<p>
-  <img src="docs/widget-large-en.png" alt="Large style" width="288" align="top">
-  <img src="docs/widget-rings-en.png" alt="Rings style" width="296" align="top">
-</p>
-<img src="docs/widget-compact-en.png" alt="Compact style" width="306">
+**Latest version: 3.0.0** · [Download `TokenPace-Setup.exe`](../../releases/latest/download/TokenPace-Setup.exe) · [What's new](#version-history)
 
 ## Features
 
-- **Real usage percentage** for each limit on your plan (5-hour session, weekly and, where applicable, Opus/Sonnet), with a countdown to the next reset.
-- **Pace forecast**: estimates how fast you're using your allowance and warns you if you'll hit the limit before it resets. A white line on each bar marks how much of the window has elapsed.
-- **Floating widget**: borderless and always on top, in three styles (Large, Rings, Compact) with adjustable opacity. Drag it anywhere and it remembers where you left it.
-- **System tray icon** that shows the percentages in its tooltip, plus a global **Ctrl+Alt+U** shortcut to show or hide the widget.
+- **Real usage percentage** for the 5-hour session and the weekly limit, with a countdown to the next reset. Secondary limits (such as *Fable*) stay hidden until you click *Show Fable usage*.
+- **Pace forecast**: estimates how fast you're using your allowance and warns you if you'll hit the limit before it resets. A white mark on each bar or ring shows how much of the window has elapsed.
+- **A widget that stays out of the way**:
+  - transparent window with rounded corners and a soft shadow, in three styles (Large, Rings, Compact);
+  - **collapses to a pill** with the percentages (— button); click the pill to expand it again;
+  - **dims** when the mouse isn't over it, unless a limit is about to run out;
+  - **snaps to screen edges** when you drop it near one, and grows towards the right side depending on the corner it sits in;
+  - **hides itself** while a full-screen app is running (games, videos, presentations).
+- **System tray icon** that shows the percentages in its tooltip, plus a global **Ctrl+Alt+U** shortcut to show or hide it.
 - **Windows notifications** at 75 %, 90 % and 100 %, and when a limit resets.
-- **Full window** (double-click the widget) with a 24-hour or 7-day usage chart and your Claude Code tokens by day, model and project.
+- **Full window** (double-click the widget) with an interactive 24-hour / 7-day history chart and your Claude Code tokens by day, type, model and project.
 - **CSV export** of the history, start with Windows, and an installer that doesn't need admin rights.
-- **English and Spanish**: follows your Windows language and can be switched at any time from the menu (*Idioma / Language*).
-- **In-app updates**: the app checks GitHub for new releases and shows *Version X available · Update*. One click downloads the installer, verifies its SHA-256 checksum and restarts the app on the new version, keeping your history, settings, shortcuts and start-with-Windows choice. You can also use *Check for updates* in the menu.
-
-<img src="docs/full-window-en.png" alt="Full window with usage limits, history chart and Claude Code tokens" width="426">
-
-*Full window (double-click the widget): limits with pace forecast, 24-hour / 7-day history and Claude Code tokens.*
+- **English and Spanish**: follows your Windows language and can be switched from the menu (*Idioma / Language*).
+- **In-app updates** with SHA-256 verification, keeping your history, settings, shortcuts and start-with-Windows choice.
 
 ## Installation
 
-1. Download **[`ClaudeUsage-Setup.exe`](../../releases/latest/download/ClaudeUsage-Setup.exe)** (latest version) or pick one from [Releases](../../releases).
+1. Download **[`TokenPace-Setup.exe`](../../releases/latest/download/TokenPace-Setup.exe)** (latest version) or pick one from [Releases](../../releases).
 2. Run it and click **Install**. If SmartScreen appears, choose *More info → Run anyway*; it shows up because the executable isn't signed.
-3. On first launch, a short wizard connects the app to your Claude account: it checks that [Claude Code](https://claude.com/claude-code) is installed (and can install it for you), opens your browser to sign in to Claude, and confirms it can read your usage. Everything updates by itself as you go.
+3. On first launch, a short wizard connects the app to your Claude account: it checks that [Claude Code](https://claude.com/claude-code) is installed (and can install it for you), opens your browser to sign in to Claude, and confirms it can read your usage.
 
-You can reopen the wizard any time from the menu (*Claude account…*) to see which account is connected or to switch accounts. A Claude subscription (Pro, Max, Team…) is required, since usage limits only apply to subscriptions.
+Requires Windows 10 or 11 with WebView2 (built into Windows 11 and up-to-date Windows 10) and a Claude subscription (Pro, Max, Team…), since usage limits only apply to subscriptions.
 
-**Already installed?** Version 2.5 and later update themselves from inside the app. If you have 2.4 or earlier, run the new installer once: it detects your installation, offers *Update* and keeps your history and settings.
+**Have *Claude Usage* 2.5?** It updates itself to TokenPace from inside the app: your folder, history and settings are kept, and the shortcut and start-with-Windows entry are replaced with TokenPace's. With 2.4 or earlier, run the new installer once.
 
-To uninstall: *Settings → Apps → Installed apps → Claude Usage*.
+To uninstall: *Settings → Apps → Installed apps → TokenPace*.
+
+## Usage
+
+| Action | Result |
+|---|---|
+| Drag the widget | Move it; drop it near an edge to snap to it |
+| **—** button | Collapse to the pill; click the pill to expand |
+| Double-click | Full window (history and tokens) |
+| Right-click | Menu: style, opacity, dimming, language, account, tools… |
+| **Ctrl+Alt+U** or click the tray icon | Show or hide |
 
 ## How it works
 
 - **Plan limits:** the app reads the OAuth token that Claude Code stores in `%USERPROFILE%\.claude\.credentials.json` and calls the same endpoint used by the `/usage` command (`api.anthropic.com/api/oauth/usage`). The token is only ever sent to Anthropic. The endpoint is undocumented and could change.
 - **Tokens:** counted from Claude Code's local logs (`%USERPROFILE%\.claude\projects\**\*.jsonl`). They only cover Claude Code usage on that PC, not the claude.ai chat.
-- **Local data:** history and settings are stored in the `data\` folder next to the executable.
+- **Local data:** history and settings are stored in the `data\` folder next to the executable (same format as version 2).
 
-No external dependencies: only the Python standard library (tkinter, ctypes and winreg).
+It's built with [Tauri 2](https://tauri.app): a Rust core and an HTML/CSS/TypeScript interface on WebView2. The executable is just a few MB.
 
-## Run from source
+## Development
+
+Requires [Node 18+](https://nodejs.org), [Rust](https://rustup.rs) (MSVC toolchain) and Visual Studio Build Tools with C++.
 
 ```bash
-pythonw ClaudeUsage.pyw
+npm install
+npx tauri dev        # app with hot reload
 ```
 
-## Build the executables
+In development the app uses a different single-instance port, so you can test it while the installed version is running. With `CLAUDE_USAGE_OFFLINE=1` it doesn't query Anthropic (handy for UI work without spending requests).
 
-Requires Python 3.10 or later. The script creates a temporary environment with PyInstaller and puts `ClaudeUsage.exe` and `ClaudeUsage-Setup.exe` in `dist\`:
+| Path | What it is |
+|---|---|
+| `src-tauri/src/` | Rust core: usage and history (`usage.rs`), tokens (`tokens.rs`), Claude Code connection (`connect.rs`), windows, tray and menu (`app.rs`), updates (`update.rs`), installer (`installer.rs`) and Windows integration (`winsys.rs`) |
+| `src/views/` | Interface: widget, full window, connection wizard and installer |
+| `src/i18n.json` | English and Spanish strings, shared by Rust and the interface |
+| `build.ps1` | Builds the app and installer into `dist\` |
+
+### Build
 
 ```bash
 powershell -ExecutionPolicy Bypass -File build.ps1
 ```
 
-| File | What it is |
-|---|---|
-| `ClaudeUsage.pyw` | The app (widget, tray, notifications, uninstall via `--uninstall`) |
-| `setup_installer.py` | The installer; supports silent install with `--silent [--dir PATH] [--no-desktop] [--no-autostart] [--no-launch]`, `--update` (used by the in-app updater; keeps the current shortcut and start-with-Windows choice) and `--lang es\|en` to force its language |
-| `build.ps1` | Builds both executables |
-| `packaging/` | Version metadata for the `.exe` files |
+The same executable is the app, its installer and its uninstaller: when its name contains *setup* it acts as the installer (`TokenPace-Setup.exe --silent [--dir PATH] [--no-desktop] [--no-autostart] [--no-launch] [--update] [--lang es|en]`), and `--uninstall [--silent]` uninstalls it.
 
 ### Publishing a new version
 
-The in-app updater reads the latest GitHub release, so each release must follow this format:
-
-1. Bump the version in `APP_VERSION` (`ClaudeUsage.pyw`), `VERSION` (`setup_installer.py`) and both files in `packaging/`.
+1. Bump the version in `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml` and `package.json`.
 2. Build with `build.ps1`.
-3. Create a GitHub release tagged **`vX.Y.Z`** (for example `v2.5.1`) and attach **`dist\ClaudeUsage-Setup.exe`** with that exact name. GitHub publishes its SHA-256 checksum, which the app verifies before installing.
+3. Create a GitHub release tagged **`vX.Y.Z`** and attach **`dist\TokenPace-Setup.exe`** and **`dist\ClaudeUsage-Setup.exe`** (the same file; 2.x installations look for this name to update themselves). GitHub publishes their SHA-256 checksum, which the app verifies before installing.
 
 ## Version history
 
 | Version | Changes |
 |---|---|
-| **2.5.2** | Fix for PCs that stayed stuck on *Anthropic is rate-limiting requests*: the connection wizard no longer re-queries every 10 seconds, waits grow (5, 10, 20, 30 min) and nothing skips them except the refresh button. The widget shows the retry time. New log file (*Open log* in the menu), also included in *Copy diagnostics*. |
-| **2.5.1** | Fixes for in-app updates: `v2.5` and `v2.5.0` count as the same version, and the app no longer gets stuck on *Installing the update…* if the installer fails to start. |
-| **2.5** | **In-app updates** with SHA-256 verification. Better Claude Code detection: the copy bundled with the Claude desktop app, nvm, scoop, bun, volta, WSL and `CLAUDE_CONFIG_DIR`. New *Copy diagnostics* button. |
-| **2.4** | **Connection wizard** on first run: installs Claude Code if needed, signs you in to Claude and checks your usage. *Not connected to Claude · Connect* notice in the widget. |
-| **2.3** | **English and Spanish** interface, switchable from the menu. |
+| **3.0.0** | **New name, TokenPace, and a rewrite on Tauri** (Rust + web UI): transparent windows with rounded corners, shadows and animations; smooth rings and charts; interactive history chart; tokens by day, type, model and project; grouped menu. A widget designed to stay out of the way: collapse to a pill, dim when idle, snap to edges and hide during full-screen apps. Secondary limits (Fable) are shown on demand. Much smaller executable. Updates from *Claude Usage* 2.5 keeping your data and settings. |
+| **2.5.2** | Fix for PCs stuck on *Anthropic is rate-limiting requests*: waits grow (5, 10, 20, 30 min). New log file (*Open log*). |
+| **2.5.1** | Fixes for in-app updates. |
+| **2.5** | **In-app updates** with SHA-256 verification. Better Claude Code detection. *Copy diagnostics* button. |
+| **2.4** | **Connection wizard** on first run. |
+| **2.3** | **English and Spanish** interface. |
 | **2.2** | First public release. |
-
-## Links
-
-- **Website:** [latest release](https://github.com/fergaschas/claude-usage-widget/releases/latest), with the installer and what's new.
-- **Topics:** [claude](https://github.com/topics/claude) · [claude-code](https://github.com/topics/claude-code) · [anthropic](https://github.com/topics/anthropic) · [windows](https://github.com/topics/windows) · [widget](https://github.com/topics/widget) · [desktop-widget](https://github.com/topics/desktop-widget) · [usage-tracker](https://github.com/topics/usage-tracker) · [rate-limits](https://github.com/topics/rate-limits) · [system-tray](https://github.com/topics/system-tray) · [python](https://github.com/topics/python) · [tkinter](https://github.com/topics/tkinter)
 
 ## License
 
