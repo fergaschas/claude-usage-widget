@@ -27,7 +27,8 @@ try {
         deviceScaleFactor: 2,
         locale: lang,
       });
-      await page.goto(`http://localhost:1430/scripts/screenshots/?${shot.query}&lang=${lang}`);
+      // con Codex: muestra los dos proveedores
+      await page.goto(`http://localhost:1430/scripts/screenshots/?${shot.query}&lang=${lang}&codex=1`);
       await page.waitForSelector(shot.selector);
       await page.waitForTimeout(1600); // barras, anillos y entrada animada
       const file = path.join(out, `${shot.name}-${lang}.png`);

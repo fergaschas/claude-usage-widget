@@ -19,8 +19,8 @@ Widget de escritorio para Windows que muestra **cuánto has usado de tu plan de 
   <img src="docs/widget-rings-es.png" alt="Estilo Anillos" width="324" align="top">
 </p>
 <p>
-  <img src="docs/widget-compact-es.png" alt="Estilo Compacto" width="314" align="top">
-  <img src="docs/widget-pill-es.png" alt="Widget minimizado a píldora" width="183" align="top">
+  <img src="docs/widget-compact-es.png" alt="Estilo Compacto" width="352" align="top">
+  <img src="docs/widget-pill-es.png" alt="Widget minimizado a píldora" width="400" align="top">
 </p>
 
 ## Funciones
@@ -41,9 +41,9 @@ Widget de escritorio para Windows que muestra **cuánto has usado de tu plan de 
 - **Español e inglés**: usa el idioma de Windows y se puede cambiar desde el menú (*Idioma / Language*).
 - **Actualizaciones desde la app** con verificación SHA-256, conservando el historial, los ajustes, los accesos directos y el inicio con Windows.
 
-<img src="docs/full-window-es.png" alt="Ventana completa con los límites, el gráfico de historial y los tokens de Claude Code" width="380">
+<img src="docs/full-window-es.png" alt="Ventana completa con los límites de Claude y Codex, el gráfico de historial y los tokens" width="380">
 
-*Ventana completa (doble clic en el widget): límites con previsión de ritmo, historial de 24 h / 7 días y tokens de Claude Code.*
+*Ventana completa (doble clic en el widget): límites de Claude y Codex con previsión de ritmo, historial de 24 h / 7 días y tokens.*
 
 ## Instalación
 
