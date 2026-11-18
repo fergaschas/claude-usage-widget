@@ -1370,3 +1370,7 @@ body.full::-webkit-scrollbar-thumb {
   text-transform: none;
   color: var(--faint);
 }
+
+.widget-card .group:first-child {
+  margin-top: 8px;
+}
